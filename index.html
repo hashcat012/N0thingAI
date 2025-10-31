@@ -1,0 +1,949 @@
+
+Şunu dedin:
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>N0thingAI - Ultra Modern Yapay Zeka Arayüzü</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Highlight.js for code syntax highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        /* --- Özel Tema Renkleri (Grok/Cyberpunk Esintili Koyu Tema) --- */
+        :root {
+            --color-primary-bg: #0F0F16; /* En Koyu Arka Plan */
+            --color-secondary-bg: #181822; /* Sidebar ve Bileşenler */
+            --color-accent: #06b6d4; /* Cyan-500 (Elektrik Mavisi Vurgu) */
+            --color-accent-dark: #0891b2; /* Cyan-600 */
+            --color-text: #E5E7EB; /* Gray 200 */
+            --color-bubble-ai: #21212B; /* AI Mesaj Baloncuğu - Daha koyu */
+            --color-bubble-user: #30303D; /* Kullanıcı Mesaj Baloncuğu - Daha morumsu */
+        }
+
+        /* Tüm uygulama genelinde koyu temayı zorla */
+        html {
+            color-scheme: dark;
+        }
+
+        /* Özel Scrollbar (Daha Şık) */
+        .chat-scroll-area::-webkit-scrollbar {
+            width: 8px;
+        }
+        .chat-scroll-area::-webkit-scrollbar-thumb {
+            background-color: transparent;
+            border-radius: 4px;
+        }
+        .chat-scroll-area:hover::-webkit-scrollbar-thumb {
+            background-color: #374151; /* Gray-700 */
+        }
+
+        /* Yazma Göstergesi Animasyonu (Modern Zıplayan Noktalar) */
+        .typing-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            margin: 0 2px;
+            background-color: var(--color-accent); 
+            border-radius: 50%;
+            opacity: 0;
+            animation: bounce 1.4s infinite ease-in-out;
+            box-shadow: 0 0 5px var(--color-accent); /* Hafif Işıltı */
+        }
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+        .typing-dot:nth-child(3) { animation-delay: 0s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% {
+                transform: scale(0);
+                opacity: 0.5;
+            }
+            40% {
+                transform: scale(1.0);
+                opacity: 1;
+            }
+        }
+
+        /* Mesaj Girişi Odak Efekti */
+        #message-input:focus {
+            outline: none;
+        }
+
+        /* Active chat item border for a modern look */
+        .active-chat-item {
+            position: relative;
+            background-color: #083344; /* Cyan-900/40 */
+            border-left: 3px solid var(--color-accent);
+        }
+        .active-chat-item::before {
+            content: none; /* Yan çizgi artık border-left ile yönetiliyor */
+        }
+        
+        .glow-button {
+            transition: all 0.3s ease;
+            box-shadow: 0 0 10px rgba(6, 182, 212, 0.4);
+        }
+        .glow-button:hover {
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.6);
+        }
+    </style>
+</head>
+
+<body class="bg-[var(--color-primary-bg)] text-[var(--color-text)] overflow-hidden h-screen flex font-[Inter]">
+
+    <!-- 1. Sidebar (Gelişmiş Konuşma Menüsü) -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out w-64 bg-[var(--color-secondary-bg)] flex flex-col z-20 shadow-2xl border-r border-gray-800">
+        
+        <!-- Sidebar Header (Logo ve Yeni Sohbet) -->
+        <div class="p-4 border-b border-gray-800 flex flex-col space-y-3">
+            <div class="flex items-center justify-between">
+                <h2 class="text-xl font-extrabold text-cyan-400 flex items-center">
+                    <i data-lucide="zap" class="w-5 h-5 mr-2"></i>
+                    N0thingAI
+                </h2>
+                <button id="close-sidebar-btn" class="md:hidden p-2 rounded-lg text-gray-400 hover:bg-gray-700 transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            
+            <!-- New Chat Button - Prominent -->
+            <button id="new-chat-btn" class="w-full flex items-center py-2 px-4 text-sm font-semibold rounded-xl text-gray-100 bg-[var(--color-accent)] hover:bg-[var(--color-accent-dark)] glow-button focus:outline-none focus:ring-4 focus:ring-cyan-500/50">
+                <i data-lucide="plus-circle" class="w-4 h-4 mr-2"></i>
+                Yeni Diyalog Başlat
+            </button>
+        </div>
+
+        <!-- Conversation History List -->
+        <div class="p-3 space-y-1 flex-grow overflow-y-auto chat-scroll-area">
+            <p class="text-xs text-gray-500 uppercase font-bold mb-2 ml-1">Kayıtlı Diyaloglar</p>
+            <div id="history-list" class="space-y-1">
+                <!-- History items will be inserted here by JS -->
+            </div>
+        </div>
+
+        <!-- User/Settings Area (Oturum Yönetimi Simülasyonu) -->
+        <div class="p-4 border-t border-gray-800">
+            <button id="open-settings-btn" class="w-full flex items-center p-2 rounded-xl transition-colors bg-gray-700/30 hover:bg-gray-700/50">
+                <div class="w-8 h-8 rounded-full bg-cyan-600 flex items-center justify-center text-sm font-bold text-white shadow-md mr-3">
+                    N0
+                </div>
+                <div class="flex-grow text-left">
+                    <p class="text-sm font-medium text-gray-100 truncate">N0thing Kullanıcısı</p>
+                    <p class="text-xs text-gray-400">Yüksek Erişim Modu</p>
+                </div>
+                <i data-lucide="cog" class="w-4 h-4 text-gray-400 ml-2"></i>
+            </button>
+        </div>
+    </aside>
+
+    <!-- 2. Main Chat Area (Ana İçerik) -->
+    <main class="flex-grow flex flex-col h-full relative bg-[var(--color-primary-bg)]">
+        
+        <!-- Mobile Sidebar Toggle & Header -->
+        <header class="p-3 md:hidden border-b border-gray-800 flex justify-between items-center bg-[var(--color-secondary-bg)] z-10 sticky top-0 shadow-lg">
+            <button id="open-sidebar-btn" class="p-2 rounded-lg text-gray-300 hover:bg-gray-700 transition-colors">
+                <i data-lucide="menu" class="w-6 h-6"></i>
+            </button>
+            <h1 class="text-lg font-bold text-gray-100">N0thingAI</h1>
+            <div class="w-10"></div>
+        </header>
+
+        <!-- Message Feed (Sohbet İçeriği) -->
+        <div id="message-feed" class="flex-grow chat-scroll-area overflow-y-auto p-4 md:p-8 space-y-8 pb-32">
+            <!-- Initial welcome message -->
+            <div class="max-w-3xl mx-auto p-4 rounded-xl shadow-lg" style="background-color: var(--color-bubble-ai);">
+                <p class="text-lg font-semibold text-cyan-400 mb-2">Ben N0thingAI. Görev Tanımlandı!</p>
+                <p class="text-sm text-gray-300">
+                    Arayüz ve sisteminiz Grok estetiğiyle yeniden yapılandırıldı. Hızlı, keskin ve doğrudan yanıtlar için hazırım.
+                    <br>
+                    <small class="text-gray-500">
+                        (Ne sormak istediğinizi yazın. Hatta bir kod bloğu isteyin, Markdown'ı da geliştirdim!)
+                    </small>
+                </p>
+            </div>
+            <!-- Messages will be injected here -->
+        </div>
+
+        <!-- Input Area (Modern Giriş Kutusu) -->
+        <footer class="absolute bottom-0 left-0 right-0 p-4 flex justify-center z-10 bg-[var(--color-primary-bg)]">
+            <div class="w-full max-w-4xl">
+                <div id="input-area" class="relative flex items-end p-2 bg-[var(--color-secondary-bg)] rounded-2xl shadow-2xl transition-all duration-300 ease-in-out border border-gray-700 focus-within:ring-2 focus-within:ring-[var(--color-accent)]/50">
+                    <textarea id="message-input" rows="1" placeholder="N0thingAI'ye bir komut verin (Shift + Enter: Yeni Satır, Enter: Gönder)"
+                        class="flex-grow resize-none overflow-y-hidden bg-transparent border-none focus:outline-none p-2 text-base text-gray-100 placeholder-gray-500 transition-all duration-150"></textarea>
+                    
+                    <button id="send-btn" disabled
+                        class="p-2 ml-2 mb-0.5 rounded-xl bg-[var(--color-accent)] text-white disabled:bg-[var(--color-accent)]/40 disabled:text-gray-200/50 disabled:cursor-not-allowed hover:bg-[var(--color-accent-dark)] glow-button">
+                        <i data-lucide="send" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                <p class="text-center text-xs text-gray-500 mt-2">
+                    N0thingAI. İsteklerinizle sınırları zorlayın.
+                </p>
+            </div>
+        </footer>
+    </main>
+    
+    <!-- 3. Settings Modal (Ayarlar ve Oturum Simülasyonu) -->
+    <div id="settings-modal" class="fixed inset-0 bg-black/80 z-30 hidden items-center justify-center p-4 transition-opacity duration-300">
+        <div class="bg-[var(--color-secondary-bg)] p-6 rounded-xl shadow-2xl max-w-lg w-full transform scale-95 transition-transform duration-300 border border-gray-700/50" role="dialog">
+            <div class="flex items-center justify-between border-b border-gray-700 pb-3 mb-4">
+                <h3 class="text-xl font-bold text-cyan-400 flex items-center">
+                    <i data-lucide="settings" class="w-5 h-5 mr-2 text-cyan-400"></i>
+                    Sistem Ayarları & Oturum
+                </h3>
+                <button id="close-settings-btn" class="text-gray-500 hover:text-cyan-400 transition-colors">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <!-- Oturum Durumu (Grok-vari) -->
+                <div class="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+                    <h4 class="text-lg font-semibold mb-2 text-cyan-300">Oturum Protokolü</h4>
+                    <p class="text-sm text-gray-400 mb-3">Aktif Kullanıcı: N0thing Kullanıcısı (Kimlik Doğrulandı)</p>
+                    <button class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium">
+                        <i data-lucide="power" class="w-4 h-4 mr-1 inline"></i> Oturumu Sonlandır
+                    </button>
+                </div>
+
+                <!-- Model Ayarları -->
+                <div class="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+                    <h4 class="text-lg font-semibold mb-2 text-cyan-300">N0thingAI Model Yapılandırması</h4>
+                    <label class="block mb-2">
+                        <span class="text-sm text-gray-300">Yanıt Hızı/Detay Düzeyi:</span>
+                        <select class="w-full mt-1 p-2 rounded-lg bg-gray-700 border-gray-600 text-gray-200">
+                            <option>Hızlı (Kısa ve Keskin)</option>
+                            <option selected>Dengeli (Optimal)</option>
+                            <option>Detaylı (Kapsamlı Analiz)</option>
+                        </select>
+                    </label>
+                    <label class="flex items-center space-x-3 text-sm text-gray-300 mt-3">
+                        <input type="checkbox" checked class="form-checkbox text-cyan-600 bg-gray-700 border-gray-600 rounded">
+                        <span>Argümanlarda "Grok-Stili" Mizahı Etkinleştir (Simüle)</span>
+                    </label>
+                </div>
+
+                <!-- Tema Seçimi -->
+                <div class="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+                    <h4 class="text-lg font-semibold mb-2 text-cyan-300">Arayüz Görünümü</h4>
+                    <div class="flex items-center justify-between">
+                        <p class="text-sm text-gray-300" id="current-theme-text">Aktif Tema: Koyu (Gece Modu)</p>
+                        <button id="theme-toggle-btn" class="flex items-center px-3 py-1 bg-gray-700 text-gray-200 rounded-full hover:bg-gray-600 transition-colors text-sm">
+                            <i id="theme-icon" data-lucide="moon" class="w-4 h-4 mr-2"></i>
+                            Temayı Değiştir
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-6 flex justify-end">
+                <button id="close-settings-modal-footer" class="px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg hover:bg-[var(--color-accent-dark)] glow-button font-medium">
+                    Kapat
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 4. Alert Modal (Hata/Uyarı) -->
+    <div id="alert-modal" class="fixed inset-0 bg-black/70 z-30 hidden items-center justify-center p-4">
+        <div class="bg-[var(--color-secondary-bg)] p-6 rounded-xl shadow-2xl max-w-sm w-full transform transition-all scale-100 border border-gray-700" role="alert">
+            <div class="flex items-center justify-between mb-4">
+                <h3 id="alert-title" class="text-lg font-bold text-red-400 flex items-center">
+                    <i data-lucide="alert-triangle" class="w-5 h-5 mr-2"></i>
+                    Hata Başlığı
+                </h3>
+                <button id="close-alert-btn" class="text-gray-500 hover:text-gray-300 transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <p id="alert-message" class="text-sm text-gray-300">
+                Hata mesajı burada görünecek.
+            </p>
+        </div>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // --- 1. GLOBAL SETUP & CONSTANTS ---
+        const API_KEY = ""; 
+        const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=" + API_KEY;
+        const MAX_RETRIES = 5;
+
+        // --- 2. DOM ELEMENTS ---
+        const body = document.body;
+        const sidebar = document.getElementById('sidebar');
+        const openSidebarBtn = document.getElementById('open-sidebar-btn');
+        const closeSidebarBtn = document.getElementById('close-sidebar-btn');
+        const themeToggleBtn = document.getElementById('theme-toggle-btn');
+        const themeIcon = document.getElementById('theme-icon');
+        const messageFeed = document.getElementById('message-feed');
+        const messageInput = document.getElementById('message-input');
+        const sendBtn = document.getElementById('send-btn');
+        const newChatBtn = document.getElementById('new-chat-btn');
+        const historyList = document.getElementById('history-list');
+        const alertModal = document.getElementById('alert-modal');
+        const closeAlertBtn = document.getElementById('close-alert-btn');
+        const alertTitle = document.getElementById('alert-title');
+        const alertMessage = document.getElementById('alert-message');
+        const openSettingsBtn = document.getElementById('open-settings-btn');
+        const settingsModal = document.getElementById('settings-modal');
+        const closeSettingsBtn = document.getElementById('close-settings-btn');
+        const closeSettingsModalFooter = document.getElementById('close-settings-modal-footer');
+        const currentThemeText = document.getElementById('current-theme-text');
+        
+        const AI_BUBBLE_BG = 'var(--color-bubble-ai)';
+        const USER_BUBBLE_BG = 'var(--color-bubble-user)';
+        const ACCENT_COLOR = 'var(--color-accent)';
+
+        let isTyping = false;
+        let currentChatId = localStorage.getItem('currentChatId') || crypto.randomUUID();
+        let chats = JSON.parse(localStorage.getItem('chats')) || {};
+        
+        // --- 3. UTILITY FUNCTIONS (Markdown, Theme, Scroll) ---
+
+        /**
+         * Basit Markdown'ı HTML'e dönüştürür. Code blokları için Highlight.js kullanır.
+         */
+        function markdownToHtml(markdown) {
+            let html = markdown
+                .replace(/^### (.*$)/gim, '<h3 class="text-lg font-semibold mt-4 mb-2">$1</h3>')
+                .replace(/^## (.*$)/gim, '<h2 class="text-xl font-bold mt-5 mb-3">$1</h2>')
+                .replace(/^# (.*$)/gim, '<h1 class="text-2xl font-extrabold mt-6 mb-4">$1</h1>')
+                .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/gim, '<em>$1</em>');
+
+            // Code blocks (triple backticks)
+            html = html.replace(/
+(\w*)\n([\s\S]*?)
+/g, (match, lang, code) => {
+                const language = lang.trim() || 'plaintext';
+                const escapedCode = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                
+                let highlightedCode;
+                try {
+                    highlightedCode = hljs.highlight(escapedCode, { language: language }).value;
+                } catch (e) {
+                    highlightedCode = escapedCode;
+                }
+
+                return <pre class="hljs rounded-xl my-4 p-4 overflow-x-auto"><code class="language-${language} block">${highlightedCode}</code></pre>;
+            });
+
+            // Handle lists
+            html = html.replace(/(\r?\n|^)([*-]|\d+\.) (.*)/g, (match, p1, p2, p3) => {
+                if (p2.match(/\d+\./)) {
+                    return ${p1}<li class="ml-6 list-decimal">${p3}</li>;
+                }
+                return ${p1}<li class="ml-6 list-disc">${p3}</li>;
+            }).replace(/(<\/li>\s*<li[^>]*>)/gi, '').replace(/(\n|^)<li/g, (match, p1) => {
+                return (p1.match(/\n\n/) ? '\n\n' : '\n') + '<li';
+            }).replace(/(\r?\n){2,}(<li|<\/ul>|<ol>)/g, (match, p1, p2) => p2);
+
+            html = html.replace(/(\n|^)(\*|\-) (.*)/g, (match, p1, p2, p3) => ${p1}<li>${p3}</li>).replace(/(\n|^)\d+\. (.*)/g, (match, p1, p2) => ${p1}<ol><li>${p2}</li></ol>);
+            
+            // Final list grouping (simplistic but works for this level)
+            html = html.replace(/(<\/li>)\s*<li>/g, '$1').replace(/(<\/ul>)\s*<ul>/g, '$1').replace(/(<\/ol>)\s*<ol>/g, '$1');
+            html = html.replace(/(\n|^)<li>(.*?)<\/li>/g, (match, p1, p2) => {
+                const isList = p1.includes('ul') || p1.includes('ol');
+                if (isList) return match;
+                return ${p1}<ul class="list-disc pl-5 my-2"><li>${p2}</li></ul>;
+            });
+
+            // Replace remaining double newlines with paragraphs
+            html = html.split('\n\n').map(p => {
+                if (p.trim() !== '' && !p.startsWith('<h') && !p.startsWith('<pre') && !p.startsWith('<ul') && !p.startsWith('<ol') && !p.startsWith('<li>') ) {
+                    return <p class="mb-3 last:mb-0">${p.trim()}</p>;
+                }
+                return p;
+            }).join('\n');
+            
+            html = html.replace(/(\n{2,})/g, '\n');
+
+            return html;
+        }
+
+        /**
+         * Özelleştirilmiş bir uyarı penceresi görüntüler.
+         */
+        function showAlert(title, message) {
+            alertTitle.innerHTML = <i data-lucide="alert-triangle" class="w-5 h-5 mr-2"></i> ${title};
+            alertMessage.textContent = message;
+            alertModal.classList.remove('hidden');
+            alertModal.classList.add('flex');
+            lucide.createIcons();
+        }
+
+        /**
+         * Temayı uygular (Simüle edilmiş - sadece Dark Mode)
+         */
+        function applyTheme(isDark) {
+            // Şu an sadece Dark Mode mevcut, ancak toggle simülasyonu için yapıyı koruyoruz.
+            if (isDark) {
+                localStorage.setItem('theme', 'dark');
+                currentThemeText.textContent = 'Aktif Tema: Koyu (Gece Modu)';
+                themeIcon.setAttribute('data-lucide', 'moon');
+            } else {
+                 localStorage.setItem('theme', 'light');
+                 currentThemeText.textContent = 'Aktif Tema: Açık (Simüle)';
+                 themeIcon.setAttribute('data-lucide', 'sun');
+            }
+            lucide.createIcons(); 
+        }
+
+        function toggleTheme() {
+            const currentTheme = localStorage.getItem('theme') === 'dark';
+            applyTheme(!currentTheme);
+        }
+
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            applyTheme(savedTheme === 'dark');
+        }
+
+        /**
+         * Metin alanı yüksekliğini içeriğe göre ayarlar.
+         */
+        function adjustInputHeight() {
+            messageInput.style.height = 'auto';
+            messageInput.style.height = (messageInput.scrollHeight > 200 ? 200 : messageInput.scrollHeight) + 'px';
+        }
+
+        /**
+         * Mesaj akışını en alta kaydırır.
+         */
+        function scrollToBottom() {
+            messageFeed.scrollTo({
+                top: messageFeed.scrollHeight,
+                behavior: 'smooth'
+            });
+        }
+
+        // --- 4. CHAT RENDERING ---
+
+        /**
+         * Tek bir sohbet mesajı için HTML yapısını oluşturur.
+         */
+        function createMessageElement(message) {
+            const isUser = message.role === 'user';
+            
+            const containerClass = isUser ? 'justify-end' : 'justify-start';
+            const bubbleBg = isUser ? USER_BUBBLE_BG : AI_BUBBLE_BG;
+            const icon = isUser 
+                ? <i data-lucide="user" class="w-5 h-5 text-gray-400"></i> 
+                : <i data-lucide="zap" class="w-5 h-5 text-cyan-400"></i>;
+            
+            const messageEl = document.createElement('div');
+            messageEl.className = flex ${containerClass} max-w-full group; 
+            
+            // Avatar ve İçerik sırası
+            const innerFlex = document.createElement('div');
+            innerFlex.className = flex ${isUser ? 'flex-row-reverse' : 'flex-row'} items-start space-x-3 max-w-[90%] md:max-w-[70%];
+
+            // Avatar
+            const avatar = document.createElement('div');
+            avatar.className = p-2 ${isUser ? 'bg-gray-700/50' : 'bg-cyan-600/50'} rounded-full mt-1.5 flex-shrink-0 shadow-md;
+            avatar.innerHTML = icon;
+
+            // Content bubble
+            const contentWrapper = document.createElement('div');
+            contentWrapper.className = flex flex-col ${isUser ? 'items-end' : 'items-start'};
+
+            const contentEl = document.createElement('div');
+            contentEl.style.backgroundColor = bubbleBg; 
+            
+            // YAZMA GÖSTERGESİ İÇİN ÖZEL KOŞUL
+            if (message.content === '<typing-indicator>') {
+                 contentEl.className = px-4 py-3 rounded-xl transition-all duration-300 inline-block text-left shadow-lg border border-gray-700 w-auto;
+                 contentEl.innerHTML = 
+                    <div class="flex items-center space-x-1">
+                        <span class="typing-dot"></span>
+                        <span class="typing-dot"></span>
+                        <span class="typing-dot"></span>
+                    </div>
+                ;
+            } else {
+                contentEl.className = px-4 py-3 rounded-xl transition-all duration-300 inline-block text-left whitespace-pre-wrap text-sm shadow-xl border border-gray-700/50 relative group/bubble;
+                contentEl.style.wordBreak = 'break-word';
+
+                if (isUser) {
+                    contentEl.textContent = message.content;
+                } else {
+                    contentEl.innerHTML = markdownToHtml(message.content);
+                    
+                    // Add Copy Button to AI message (visible on hover)
+                    const copyBtn = document.createElement('button');
+                    copyBtn.innerHTML = <i data-lucide="copy" class="w-4 h-4"></i>;
+                    copyBtn.title = 'Yanıtı Kopyala';
+                    copyBtn.className = 'absolute -top-3 right-3 p-1 rounded-full bg-gray-800 text-gray-400 opacity-0 group-hover/bubble:opacity-100 transition-opacity text-xs hover:text-cyan-400 shadow-md border border-gray-700';
+                    copyBtn.onclick = (e) => copyTextToClipboard(message.content, e.currentTarget);
+                    contentEl.appendChild(copyBtn);
+                }
+            }
+            
+            // Mesaj Zamanı (Opsiyonel)
+            const timeEl = document.createElement('span');
+            timeEl.className = text-xs text-gray-500 mt-1 ${isUser ? 'mr-1' : 'ml-1'};
+            timeEl.textContent = new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+
+            contentWrapper.appendChild(contentEl);
+            contentWrapper.appendChild(timeEl);
+
+            innerFlex.appendChild(avatar);
+            innerFlex.appendChild(contentWrapper);
+            
+            if (isUser) {
+                innerFlex.insertBefore(contentWrapper, avatar);
+            }
+
+            messageEl.appendChild(innerFlex);
+
+            return messageEl;
+        }
+        
+        /**
+         * Mesajı DOM'a ekler ve kaydırmayı gerçekleştirir.
+         * @param {object} message Mesaj nesnesi ({ role: string, content: string })
+         * @returns {HTMLElement} Eklenen mesaj elementinin kendisi.
+         */
+        function appendMessage(message) {
+            const messageEl = createMessageElement(message);
+            messageFeed.appendChild(messageEl);
+            scrollToBottom();
+            return messageEl;
+        }
+
+        /**
+         * Geçerli sohbet kimliği için tüm mesajları oluşturur.
+         */
+        function renderMessages(messages) {
+            messageFeed.innerHTML = '';
+            // Hoş Geldiniz mesajını tekrar ekle (Boş sohbetler için)
+            if (!messages || messages.length === 0 || messages.every(m => m.role === 'system')) {
+                 messageFeed.innerHTML = 
+                    <div class="max-w-3xl mx-auto p-6 rounded-xl shadow-lg mt-8" style="background-color: var(--color-bubble-ai);">
+                        <p class="text-xl font-bold text-cyan-400 mb-2">Ben N0thingAI!</p>
+                        <p class="text-base text-gray-300">
+                            Sisteminiz yeniden başlatıldı ve Grok estetiğiyle optimize edildi. Yeni bir komutla (diyalog) başlayın.
+                            <br>
+                            <small class="text-gray-500">
+                                (Yüksek hızlı, kısa ve öz yanıtlar için yapılandırıldım.)
+                            </small>
+                        </p>
+                    </div>
+                ;
+            } else {
+                messages.forEach(msg => {
+                    if (msg.role !== 'system') { 
+                        messageFeed.appendChild(createMessageElement(msg));
+                    }
+                });
+            }
+            scrollToBottom();
+            lucide.createIcons(); 
+        }
+
+        /**
+         * Geçmiş listesini (Sidebar'daki Konuşmalar) günceller.
+         */
+        function renderHistoryList() {
+            historyList.innerHTML = '';
+            
+            const sortedChats = Object.entries(chats)
+                .map(([id, chat]) => ({ id, ...chat }))
+                .sort((a, b) => b.timestamp - a.timestamp); // En son kullanılanı üste getir
+
+            sortedChats.forEach(chat => {
+                const isActive = chat.id === currentChatId;
+                const listItem = document.createElement('button');
+                listItem.title = chat.title || 'Boş Diyalog';
+                listItem.className = w-full text-left p-3 text-sm rounded-xl truncate transition-all duration-150 flex items-center justify-between group/chat ${
+                    isActive 
+                        ? 'text-gray-100 font-medium active-chat-item' 
+                        : 'text-gray-300 hover:bg-gray-700/30'
+                };
+                listItem.innerHTML = 
+                    <div class="flex items-center min-w-0">
+                        <i data-lucide="message-square" class="w-4 h-4 mr-2 flex-shrink-0 ${isActive ? 'text-cyan-400' : 'text-gray-500'}"></i>
+                        <span class="truncate">${chat.title || 'Boş Diyalog'}</span>
+                    </div>
+                    <i data-lucide="trash-2" class="w-4 h-4 text-gray-600 hover:text-red-400 ml-2 flex-shrink-0 opacity-0 ${isActive ? 'opacity-100' : 'group-hover/chat:opacity-100'}" onclick="event.stopPropagation(); deleteChat('${chat.id}')"></i>
+                ;
+
+                listItem.onclick = () => {
+                    if (window.innerWidth < 768) { sidebar.classList.add('-translate-x-full'); }
+                    loadChat(chat.id);
+                };
+                historyList.appendChild(listItem);
+            });
+            lucide.createIcons();
+        }
+        
+        // --- 5. CHAT MANAGEMENT ---
+
+        /**
+         * Yeni bir sohbet başlatır.
+         */
+        function newChat() {
+            // Önceki sohbetin boş olup olmadığını kontrol et
+            if (chats[currentChatId] && chats[currentChatId].messages.length === 0) {
+                 delete chats[currentChatId]; // Boşsa sil
+            }
+            
+            currentChatId = crypto.randomUUID();
+            localStorage.setItem('currentChatId', currentChatId);
+            
+            if (!chats[currentChatId]) {
+                chats[currentChatId] = {
+                    title: 'Yeni Diyalog',
+                    messages: [],
+                    timestamp: Date.now()
+                };
+            }
+            saveChats();
+            loadChat(currentChatId);
+            renderHistoryList();
+            
+            // Mobilde kenar çubuğunu kapat
+            if (window.innerWidth < 768) {
+                sidebar.classList.add('-translate-x-full');
+            }
+        }
+        
+        /**
+         * Bir sohbeti yükler ve mesajlarını görüntüler.
+         */
+        function loadChat(chatId) {
+            currentChatId = chatId;
+            localStorage.setItem('currentChatId', chatId);
+            renderMessages(chats[chatId].messages);
+            renderHistoryList();
+        }
+
+        /**
+         * Sohbet durumunu localStorage'a kaydeder.
+         */
+        function saveChats() {
+            localStorage.setItem('chats', JSON.stringify(chats));
+        }
+        
+        /**
+         * Tek bir sohbeti siler.
+         */
+        function deleteChat(chatIdToDelete) {
+            // NOTE: alert() yerine custom modal kullanıldı
+            if (confirm("Bu diyaloğu kalıcı olarak silmek istediğinizden emin misiniz?")) {
+                delete chats[chatIdToDelete];
+                saveChats();
+                
+                if (chatIdToDelete === currentChatId) {
+                    // Eğer aktif sohbet silindiyse yeni bir sohbet başlat
+                    newChat();
+                } else {
+                    renderHistoryList();
+                }
+            }
+        }
+
+        // --- 6. MESSAGE HANDLING & API LOGIC ---
+
+        function delay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        /**
+         * Üstel Geri Çekilme (Exponential Backoff) ile Gemini API'sini çağırır.
+         */
+        async function callGeminiAPI(history, attempt = 1) {
+            const url = API_URL;
+
+            // UI rollerini API rollerine eşle
+            const conversationHistory = history.map(msg => ({
+                role: msg.role === 'assistant' ? 'model' : msg.role,
+                parts: [{ text: msg.content }]
+            }));
+            
+            const payload = {
+                contents: conversationHistory,
+                systemInstruction: {
+                    parts: [{ text: "You are N0thingAI, a highly intelligent, modern, and slightly 'Grok-style' helpful AI. Your responses must be concise, direct, and utilize superior Markdown formatting, including code blocks, lists, and bold text when necessary. You operate in High-Speed mode. Respond exclusively in Turkish." }]
+                },
+            };
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.status === 429 && attempt < MAX_RETRIES) {
+                    const waitTime = Math.pow(2, attempt) * 1000 + (Math.random() * 1000);
+                    await delay(waitTime);
+                    return callGeminiAPI(history, attempt + 1);
+                }
+
+                if (!response.ok) {
+                    const errorBody = await response.json();
+                    throw new Error(API Hatası: ${response.status} - ${errorBody.error?.message || response.statusText});
+                }
+
+                const result = await response.json();
+                const generatedText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (!generatedText) {
+                    throw new Error("API geçerli bir yanıt metni döndürmedi. İçerik engellenmiş veya yanıt boş olabilir.");
+                }
+
+                return generatedText;
+
+            } catch (error) {
+                // Ağ hatası denemesi
+                if ((error.message.includes('Failed to fetch') || error.message.includes('Ağ Hatası')) && attempt < MAX_RETRIES) {
+                     const waitTime = Math.pow(2, attempt) * 1000 + (Math.random() * 1000); 
+                     await delay(waitTime);
+                     return callGeminiAPI(history, attempt + 1);
+                }
+                throw error; // Son hatayı tekrar fırlat
+            }
+        }
+
+        /**
+         * Mesaj gönderme işlemini yöneten ana fonksiyon.
+         */
+        async function sendMessage() {
+            if (isTyping) return;
+            const userText = messageInput.value.trim();
+            if (!userText) return;
+
+            messageInput.value = '';
+            adjustInputHeight();
+            sendBtn.disabled = true; 
+
+            // 1. Kullanıcı Mesajını Ekle
+            let currentChat = chats[currentChatId];
+            if (!currentChat) {
+                currentChat = { title: userText.substring(0, 30) + (userText.length > 30 ? '...' : ''), messages: [], timestamp: Date.now() };
+                chats[currentChatId] = currentChat;
+            }
+            
+            const userMessage = { role: 'user', content: userText };
+            appendMessage(userMessage);
+            currentChat.messages.push(userMessage);
+
+
+            // 2. AI Yazma Göstergesini Ekle
+            const typingIndicatorEl = appendMessage({ role: 'assistant', content: '<typing-indicator>' });
+
+
+            // 3. Sohbet Durumunu Güncelle
+            currentChat.title = userText.substring(0, 30) + (userText.length > 30 ? '...' : '');
+            currentChat.timestamp = Date.now();
+            saveChats();
+            renderHistoryList();
+
+            // 4. API'yi Çağır
+            isTyping = true;
+            let finalResponseText = "API'den yanıt alınamadı.";
+
+            try {
+                const geminiResponse = await callGeminiAPI(currentChat.messages);
+                finalResponseText = geminiResponse;
+                
+                // 5. Yer tutucuyu kaldır
+                typingIndicatorEl.remove();
+
+                // 6. Yeni AI mesajını geçmişe ekle ve DOM'a yerleştir
+                const aiMessage = { role: 'assistant', content: '' };
+                currentChat.messages.push(aiMessage);
+                const aiMessageEl = appendMessage(aiMessage);
+
+                // 7. Yazma Animasyonu ve Görüntüleme
+                await typeResponse(aiMessageEl, finalResponseText);
+
+                // 8. Depolamadaki AI Mesajını Güncelle
+                aiMessage.content = finalResponseText;
+                
+            } catch (error) {
+                typingIndicatorEl.remove(); // Hata oluştuğunda göstergeyi kaldır
+                
+                let errorMessage;
+                if (error.message.includes('429') || error.message.includes('quota')) {
+                    showAlert("API Kota Limiti", "API kullanım kotanız dolmuş veya limitlenmiştir. Lütfen daha sonra tekrar deneyin.");
+                    errorMessage = "Üzgünüz, API kota limitine ulaşıldı. (N0thingAI'ye bir süre sonra tekrar komut verin.)";
+                } else if (error.message.includes('400')) {
+                     showAlert("Geçersiz İstek", "API, geçersiz veya çok uzun bir istek aldığını bildirdi. Girişinizi kontrol edin.");
+                     errorMessage = "API Hatası: Geçersiz Komut. (İstek metni çok uzun veya hatalı olabilir.)";
+                } else {
+                    console.error("API Error:", error);
+                    showAlert("Bağlantı/Sunucu Hatası", "N0thingAI servisine ulaşılamadı. Bağlantınızı kontrol edin.");
+                    errorMessage = Kritik Hata: ${error.message};
+                }
+                
+                finalResponseText = **[Sistem Uyarısı]** ${errorMessage};
+                
+                // Hata mesajını geçmişe ekle
+                const aiMessage = { role: 'assistant', content: finalResponseText };
+                currentChat.messages.push(aiMessage);
+                const aiMessageEl = appendMessage(aiMessage);
+
+                // Hatanın anında baloncuğa gösterilmesi
+                const contentEl = aiMessageEl.querySelector('.whitespace-pre-wrap');
+                contentEl.innerHTML = markdownToHtml(finalResponseText);
+                
+                // Kopyalama düğmesini tekrar ekle
+                const copyBtn = document.createElement('button');
+                copyBtn.innerHTML = <i data-lucide="copy" class="w-4 h-4"></i>;
+                copyBtn.title = 'Yanıtı Kopyala';
+                copyBtn.className = 'absolute -top-3 right-3 p-1 rounded-full bg-gray-800 text-gray-400 opacity-0 group-hover/bubble:opacity-100 transition-opacity text-xs hover:text-cyan-400 shadow-md border border-gray-700';
+                copyBtn.onclick = (e) => copyTextToClipboard(finalResponseText, e.currentTarget);
+                contentEl.appendChild(copyBtn);
+
+            } finally {
+                isTyping = false;
+                sendBtn.disabled = false;
+                saveChats();
+                lucide.createIcons();
+            }
+        }
+
+        /**
+         * Yanıt metnini mesaj baloncuğuna anime ederek yazar.
+         */
+        async function typeResponse(messageEl, text) {
+            const contentEl = messageEl.querySelector('.whitespace-pre-wrap');
+            contentEl.innerHTML = ''; 
+
+            // \n karakterlerini de ayrı bir token olarak saymak için regex
+            const tokens = text.match(/[\s\S]/g) || []; 
+            let typedText = '';
+
+            // Copy button needs to be added back after content is typed
+            const copyBtn = messageEl.querySelector('.group/bubble button'); 
+
+            for (const token of tokens) {
+                typedText += token;
+                
+                // Render frequently to handle visual breaks (like code blocks) correctly
+                if (typedText.length % 8 === 0 || typedText.length === tokens.length) {
+                    contentEl.innerHTML = markdownToHtml(typedText);
+                    scrollToBottom();
+                    lucide.createIcons(); 
+                }
+
+                await new Promise(resolve => setTimeout(resolve, 5)); // Daha hızlı yazma hızı
+            }
+            
+            // Son kopyala düğmesinin görünürlüğünü etkinleştir
+            if(copyBtn) {
+                copyBtn.onclick = (e) => copyTextToClipboard(text, e.currentTarget);
+            }
+        }
+        
+        // --- 7. UX/UI UTILITIES ---
+
+        /**
+         * Metni panoya kopyalar ve görsel geri bildirim verir.
+         */
+        function copyTextToClipboard(text, button) {
+             // Kopyala düğmesini geçici olarak kopyalandı olarak değiştir
+            const originalIcon = button.innerHTML;
+            button.innerHTML = <i data-lucide="check" class="w-4 h-4 text-green-400"></i>;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                setTimeout(() => {
+                    button.innerHTML = originalIcon;
+                    lucide.createIcons();
+                }, 1500);
+                lucide.createIcons();
+            }).catch(err => {
+                console.error('Kopyalama başarısız: ', err);
+                // Fallback (iFrame kısıtlamaları için)
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                document.body.appendChild(textarea);
+                textarea.select();
+                try {
+                    document.execCommand('copy');
+                } catch (err) {
+                    console.error('Fallback kopyalama da başarısız oldu: ', err);
+                }
+                document.body.removeChild(textarea);
+            });
+        }
+
+        // --- 8. EVENT LISTENERS & INITIALIZATION ---
+
+        window.onload = () => {
+            loadTheme();
+            lucide.createIcons(); 
+
+            // Mevcut sohbeti yükle veya yeni bir sohbet başlat
+            if (!chats[currentChatId] || chats[currentChatId].messages.length === 0) {
+                newChat(); 
+            } else {
+                loadChat(currentChatId);
+            }
+        };
+
+        // UI Interactions
+        themeToggleBtn.addEventListener('click', toggleTheme);
+        newChatBtn.addEventListener('click', newChat);
+        
+        // Settings Modal
+        openSettingsBtn.addEventListener('click', () => {
+             settingsModal.classList.remove('hidden');
+             settingsModal.classList.add('flex');
+        });
+
+        closeSettingsBtn.addEventListener('click', () => {
+             settingsModal.classList.remove('flex');
+             settingsModal.classList.add('hidden');
+        });
+        
+        closeSettingsModalFooter.addEventListener('click', () => {
+             settingsModal.classList.remove('flex');
+             settingsModal.classList.add('hidden');
+        });
+
+        // Alert Modal
+        closeAlertBtn.addEventListener('click', () => {
+            alertModal.classList.remove('flex');
+            alertModal.classList.add('hidden');
+        });
+
+        // Mobile Sidebar Toggles
+        openSidebarBtn.addEventListener('click', () => sidebar.classList.remove('-translate-x-full'));
+        closeSidebarBtn.addEventListener('click', () => sidebar.classList.add('-translate-x-full'));
+        
+        // Input and Send
+        sendBtn.addEventListener('click', sendMessage);
+        
+        messageInput.addEventListener('input', () => {
+            adjustInputHeight();
+            sendBtn.disabled = messageInput.value.trim() === '' || isTyping;
+        });
+
+        // Keyboard Shortcut (Enter Key)
+        messageInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault(); 
+                if (!sendBtn.disabled) {
+                    sendMessage();
+                }
+            }
+        });
+        
+        // Disable send button initially if input is empty
+        messageInput.addEventListener('keyup', () => {
+            sendBtn.disabled = messageInput.value.trim() === '' || isTyping;
+        });
+
+    </script>
+</body>
+</html>
