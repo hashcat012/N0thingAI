@@ -4,7 +4,7 @@
     <meta name="google-site-verification" content="AQSoYrgNNGutZzf4jpzwVieUI29wYj_CJKfNka2Uk4I" />
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>N0thingAI | Gemini Hybrid</title>
+    <title>N0thingAI | Gemini & HF Hybrid</title>
     <!-- İkonlar için Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <!-- Tailwind CSS -->
@@ -599,8 +599,8 @@
                     </button>
                     <input type="file" id="file-input" accept="image/*" class="hidden">
 
-                    <!-- Görsel Oluşturma butonu -->
-                    <button class="icon-btn" id="image-mode-btn" title="Görsel Oluşturma Modu (Bakımda)">
+                    <!-- Görsel Oluşturma butonu (Hugging Face'e bağlı) -->
+                    <button class="icon-btn" id="image-mode-btn" title="Görsel Oluşturma Modu">
                         <i class="fas fa-palette"></i>
                     </button>
 
@@ -628,22 +628,6 @@
 
                 <div class="space-y-4">
                     <!-- SOSYAL GİRİŞ (KALDIRILDI) -->
-                    <!--
-                    <button id="google-signin-btn" class="w-full py-3 rounded-lg font-semibold social-btn flex items-center justify-center">
-                        <i class="fab fa-google mr-3"></i> Google ile Giriş Yap
-                    </button>
-                    <button id="apple-signin-btn" class="w-full py-3 rounded-lg font-semibold social-btn flex items-center justify-center">
-                        <i class="fab fa-apple mr-3"></i> Apple ile Giriş Yap
-                    </button>
-                    <div class="relative my-6">
-                        <div class="absolute inset-0 flex items-center">
-                            <div class="w-full border-t" style="border-color: var(--input-border);"></div>
-                        </div>
-                        <div class="relative flex justify-center text-sm">
-                            <span class="px-2" style="background-color: var(--modal-bg); color: var(--text-secondary);">veya</span>
-                        </div>
-                    </div>
-                    -->
 
                     <!-- Email/Şifre Alanı -->
                     <input id="email-input" type="email" placeholder="Email adresiniz" class="w-full p-3 rounded-lg border">
@@ -716,14 +700,15 @@
             query, orderBy, serverTimestamp, getDocs 
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // --- API Keys ve Modeller ---
-        // KULLANICININ ANA API ANAHTARI (GEMINI)
-        const GEMINI_CHAT_API_KEY = "AIzaSyCx4u1qHGlysIGpm1Zw0YBfXlqEXJ1BlvM"; // Sohbet ve Analiz için
-        // GÖRSEL OLUŞTURMA API ANAHTARI (BAKIMDA - KULLANILMIYOR)
-        // const IMAGE_GEN_API_KEY = "FPSXff56d91f1709400bf5a9bb42e5b4a717"; 
-        
+        // --- HİBRİT API Keys ve Modeller ---
+        // 1. SOHBET + GÖRSEL ANALİZ (Google)
+        const GEMINI_API_KEY = "AIzaSyCx4u1qHGlysIGpm1Zw0YBfXlqEXJ1BlvM"; 
         const CHAT_MODEL = "gemini-2.5-flash-preview-09-2025";
-        // const IMAGE_GEN_MODEL = "imagen-3.0-generate-002"; // Veya DeepSeek/SD
+        
+        // 2. GÖRSEL OLUŞTURMA (Hugging Face)
+        const HUGGINGFACE_API_KEY = "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"; // Bu anahtarı kullan
+        const IMAGE_GEN_MODEL = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0";
+        
         
         // --- KULLANICININ YENİ FIREBASE CONFIG BİLGİSİ ---
         const firebaseConfig = {
@@ -815,19 +800,24 @@
         let unsubscribeHistory = null; // Sohbet listesi dinleyicisini
 
         /**
-         * API Çağrısını Üstlenir (Gemini/Imagen)
-         * model: 'gemini' or 'imagen'
+         * API Çağrısını Üstlenir (HİBRİT: Gemini ve Hugging Face)
+         * model: 'gemini' or 'huggingface'
          * payload: API'ye gönderilecek JSON gövdesi
          * apiKey: Kullanılacak API anahtarı
          */
         async function fetchWithRetry(model, payload, apiKey) {
             let url = '';
+            let headers = { 'Content-Type': 'application/json' };
+            let responseType = 'json'; // Varsayılan yanıt tipi
+
             if (model === 'gemini') {
                 url = `https://generativelanguage.googleapis.com/v1beta/models/${CHAT_MODEL}:generateContent?key=${apiKey}`;
+            } else if (model === 'huggingface') {
+                url = IMAGE_GEN_MODEL; // HF URL
+                headers['Authorization'] = `Bearer ${apiKey}`; // HF Auth Header
+                responseType = 'blob'; // HF görsel yanıtı blob'dur
             } else {
-                // Görsel oluşturma (Bakımda olduğu için bu kısım çağrılmayacak)
-                // url = `https://api.deepseek.com/v1/images/generations`; // Örnek DeepSeek/Imagen URL
-                renderSystemMessage("Görsel oluşturma modu şu anda bakımda.", "error");
+                renderSystemMessage("Hata: Geçersiz API modeli.", "error");
                 return null;
             }
 
@@ -838,38 +828,46 @@
                 try {
                     const response = await fetch(url, {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            // DeepSeek/OpenAI stili için: 'Authorization': `Bearer ${apiKey}`
-                        },
+                        headers: headers,
                         body: JSON.stringify(payload)
                     });
 
-                    if (response.status === 503) { // Model yükleniyor (HF/Bazı API'ler)
+                    if (response.status === 503) { // HF Model yükleniyor
                         throw new Error("503");
                     }
                     if (!response.ok) {
+                        // HF hatası (JSON değilse)
+                        if (responseType === 'blob') {
+                            const errorText = await response.text();
+                            throw new Error(`API Hatası (${response.status}): ${errorText}`);
+                        }
                         const errorData = await response.json();
                         throw new Error(`API Hatası (${response.status}): ${errorData.error?.message || 'Bilinmeyen Hata'}`);
                     }
                     
-                    return await response.json();
+                    // Başarılı yanıt
+                    if (responseType === 'json') {
+                        return await response.json();
+                    } else if (responseType === 'blob') {
+                        return await response.blob();
+                    }
 
                 } catch (error) {
                     attempt++;
                     if (error.message === "503") {
-                        showTypingIndicator("Model yükleniyor, lütfen bekleyin...");
-                        await new Promise(resolve => setTimeout(resolve, 5000 * attempt)); // Gecikmeyi artır
+                        showTypingIndicator("Hugging Face modeli yükleniyor... (Bu 1-2 dk sürebilir)");
+                        await new Promise(resolve => setTimeout(resolve, 10000 * attempt)); // HF için gecikmeyi artır
                     } else {
                         console.error(`API Denemesi ${attempt} başarısız:`, error);
                         if (attempt >= MAX_RETRIES) {
                              renderSystemMessage(`**HATA:** ${error.message}`, "error");
-                             return null;
+                             return null; // Null döndür
                         }
                     }
                 }
             }
-            throw new Error(`[${model}] Maksimum deneme sayısına ulaşıldı.`);
+            // Döngü bittiyse ve hala hata varsa
+            return null;
         }
 
         // --- UI Helper Functions ---
@@ -955,26 +953,29 @@
             chatMode = mode;
             
             if (mode === 'image') {
-                // Görsel Modu (Bakımda)
-                renderSystemMessage("Görsel oluşturma modu şu anda bakımda. Sohbet moduna geri dönülüyor.", "error");
-                // Hemen metin moduna geri dön
-                chatMode = 'text'; 
-                return; // Mod değişimini engelle
+                // GÖRSEL MODU (Hugging Face)
+                if(CURRENT_MODE_DISPLAY) CURRENT_MODE_DISPLAY.textContent = "Görsel Modu"; // "HF" kaldırıldı
+                if(CHAT_INPUT) CHAT_INPUT.placeholder = "Görsel tanımını (prompt) girin...";
+                if(IMAGE_MODE_BTN) IMAGE_MODE_BTN.classList.add('text-green-500'); // Aktif olduğunu göstermek için yeşil yap
+                if(notify) renderSystemMessage("Görsel Modu **AKTİF**. (Sohbet etmek için 'Sohbet Modu'na geçin)"); // "Hugging Face" kaldırıldı
                 
             } else {
-                // Sohbet Modu
-                if(CURRENT_MODE_DISPLAY) CURRENT_MODE_DISPLAY.textContent = "Sohbet Modu";
+                // Sohbet Modu (Gemini)
+                if(CURRENT_MODE_DISPLAY) CURRENT_MODE_DISPLAY.textContent = "Sohbet Modu"; // "Gemini" kaldırıldı
                 if(CHAT_INPUT) CHAT_INPUT.placeholder = "N0thingAI'a bir mesaj gönder...";
                 if(IMAGE_MODE_BTN) IMAGE_MODE_BTN.classList.remove('text-green-500'); // Varsa yeşil vurguyu kaldır
-                // Sadece yeni bir sohbet başlatılıyorsa bu mesajı göster
-                if(notify && !currentChatId) renderSystemMessage("Sohbet Modu **AKTİF**. N0thingAI ile konuşmaya başlayın.");
+                if(notify) renderSystemMessage("Sohbet Modu **AKTİF**.");
             }
             autoScroll();
         }
 
         function toggleChatMode() {
-            // Görsel modu (palette) tıklandığında
-            setChatMode('image', true);
+            // Mod değiştirme
+            if (chatMode === 'text') {
+                setChatMode('image', true);
+            } else {
+                setChatMode('text', true);
+            }
         }
 
         async function startNewChat() {
@@ -1051,18 +1052,46 @@
             // Not: Artık onSnapshot dinleyicisi UI'ı güncelleyecek.
         }
         
+        // --- GÖRSEL OLUŞTURMA (Hugging Face) ---
+        
         /**
-         * Kullanıcı mesajını ve (varsa) görseli AI'ye gönderir.
+         * Türkçe prompt'u alıp, optimize edilmiş İngilizce prompt'a çevirir (Gemini ile)
+         */
+        async function translateAndOptimizePrompt(turkishPrompt) {
+            showTypingIndicator("Görsel tanımı optimize ediliyor...");
+
+            const systemInstruction = `You are a professional prompt engineer specializing in image generation (like Midjourney/DALL-E). Your task is to take the user's Turkish description and turn it into a single, detailed, highly descriptive English prompt, optimized for quality image output. 
+            Do not add any conversational text, just the prompt.`;
+
+            const payload = {
+                contents: [{ parts: [{ text: `Translate and optimize this Turkish prompt for image generation: ${turkishPrompt}` }] }],
+                systemInstruction: { parts: [{ text: systemInstruction }] },
+            };
+
+            try {
+                // Çeviri için 'gemini' modelini kullan
+                const result = await fetchWithRetry('gemini', payload, GEMINI_API_KEY);
+                const text = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+                
+                if (text) {
+                     return text.trim().replace(/^['"]|['"]$/g, '');
+                }
+                return turkishPrompt; // Optimize edilemezse orijinalini döndür
+            } catch (error) {
+                console.error('Prompt Çeviri/Optimizasyon Hatası:', error);
+                return turkishPrompt; 
+            }
+        }
+        
+        /**
+         * Kullanıcı mesajını ve (varsa) görseli AI'ye gönderir (Gemini Sohbet)
          */
         async function fetchGeminiResponse(userPrompt) {
             showTypingIndicator("N0thingAI düşünüyor...");
-
-            // Önce kullanıcı mesajını (UI'ı güncellemek için) kaydet
-            await saveMessage(userPrompt, 'user');
             
             let parts = [{ "text": userPrompt }];
             
-            // Eğer ekli bir görsel varsa, API isteğine ekle
+            // Eğer ekli bir görsel varsa, API isteğine ekle (Görsel Analiz)
             if (attachedImageBase64) {
                 parts.unshift({ // Görseli metinden önce ekle
                     "inline_data": {
@@ -1082,7 +1111,7 @@
             let responseText = "Üzgünüm, bir hata oluştu. Lütfen tekrar deneyin.";
 
             try {
-                const result = await fetchWithRetry('gemini', payload, GEMINI_CHAT_API_KEY);
+                const result = await fetchWithRetry('gemini', payload, GEMINI_API_KEY);
                 
                 if (result && result.candidates && result.candidates[0].content) {
                     responseText = result.candidates[0].content.parts[0].text;
@@ -1100,11 +1129,52 @@
             }
         }
         
+        /**
+         * Hugging Face (SDXL) kullanarak görsel oluşturur
+         */
         async function generateImage(userPrompt) {
-            // Bu fonksiyon artık setChatMode tarafından engellendi.
-            renderSystemMessage("Görsel oluşturma modu şu anda bakımda.", "error");
-            hideTypingIndicator();
-            toggleInput(false);
+            // 1. Türkçe prompt'u optimize et (Gemini ile)
+            const optimizedPrompt = await translateAndOptimizePrompt(userPrompt);
+
+            // 2. Hugging Face'e istek at
+            showTypingIndicator(`Görsel oluşturuluyor: "${optimizedPrompt.substring(0, 40)}..."`);
+            
+            const payload = { 
+                inputs: optimizedPrompt
+            };
+
+            let generatedBase64 = null;
+            let aiMessage = "Görsel oluşturma başarısız oldu. Lütfen daha açıklayıcı bir tanım deneyin veya API anahtarınızı kontrol edin.";
+
+            try {
+                // 'huggingface' modelini çağır
+                const imageBlob = await fetchWithRetry('huggingface', payload, HUGGINGFACE_API_KEY);
+                
+                if (imageBlob && imageBlob.size > 0) {
+                    // Blob'u Base64'e çevir
+                    generatedBase64 = await new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onloadend = () => resolve(reader.result); // Bu data:image/png... içerir
+                        reader.onerror = reject;
+                        reader.readAsDataURL(imageBlob);
+                    });
+                } else if (imageBlob) { // Hata (null değil) ama blob boş
+                    aiMessage = "API'den görsel alınamadı, ancak hata da dönmedi. Lütfen tekrar deneyin.";
+                    await saveMessage(aiMessage, 'ai');
+                }
+                // (Eğer result null ise, fetchWithRetry zaten sistem mesajı göstermiştir)
+
+            } catch (error) {
+                console.error('Görsel API Çağrısı Hatası:', error);
+                // (fetchWithRetry zaten hatayı gösterdi)
+            } finally {
+                hideTypingIndicator();
+                
+                if (generatedBase64) {
+                    // AI yanıtını görsel (base64) ve prompt metni olarak kaydet
+                    await saveMessage(optimizedPrompt, 'ai', generatedBase64); // Base64 URL olarak kaydet
+                }
+            }
         }
 
         async function sendMessage() {
@@ -1117,17 +1187,17 @@
                 return;
             }
 
+            // DÜZELTME: Mesajı göndermeden ÖNCE kaydet
+            await saveMessage(text || "(Görsel eklendi)", 'user');
+
             CHAT_INPUT.value = '';
             autoResizeTextarea(); // Textarea'yı küçült
 
             if (chatMode === 'image') {
-                // Görsel modu (Bakımda)
-                // Mesajı yine de kaydet
-                await saveMessage(text, 'user');
+                // Görsel modu (Hugging Face)
                 await generateImage(text);
             } else {
                 // Sohbet modu (Gemini)
-                // fetchGeminiResponse zaten saveMessage'ı çağırıyor.
                 await fetchGeminiResponse(text);
             }
         }
@@ -1261,7 +1331,7 @@
                 const email = EMAIL_INPUT.value;
                 const password = PASSWORD_INPUT.value;
                 if (!email || !password) {
-                    renderAuthError({ code: 'auth/missing-fields' }, 'login');
+                    renderAuthError({ code: 'auth/missing-fields', message: "Email ve şifre alanları boş bırakılamaz." }, 'login');
                     return;
                 }
                 await signInWithEmailAndPassword(auth, email, password);
@@ -1278,7 +1348,7 @@
                 const email = SIGNUP_EMAIL_INPUT.value;
                 const password = SIGNUP_PASSWORD_INPUT.value;
                 if (!email || !password) {
-                    renderAuthError({ code: 'auth/missing-fields' }, 'signup');
+                    renderAuthError({ code: 'auth/missing-fields', message: "Email ve şifre alanları boş bırakılamaz." }, 'signup');
                     return;
                 }
                 if (password.length < 6) {
@@ -1331,8 +1401,11 @@
                 }
                 snapshot.forEach(doc => {
                     const msg = doc.data();
-                    if (msg.imageUrl) {
-                        addImageToUI(msg.imageUrl, msg.text);
+                    // GÖRSEL OLUŞTURMA AKTİF: UI'ı güncelle
+                    if (msg.imageUrl && msg.sender === 'ai') { // Sadece AI görsellerini
+                        // Base64 verisi (kaydedilmişse) veya URL
+                        const imageUrl = msg.imageUrl; // Veritabanına data:image olarak kaydettik
+                        addImageToUI(imageUrl, `Görsel tanımı: "${msg.text}"`);
                     } else {
                         addMessageToUI(msg.text, msg.sender);
                     }
@@ -1511,7 +1584,7 @@
             CHAT_INPUT.addEventListener('input', autoResizeTextarea); // Otomatik büyütme
             
             // Mod Değişimi
-            IMAGE_MODE_BTN.addEventListener('click', toggleChatMode); // Bakımda mesajı verecek
+            IMAGE_MODE_BTN.addEventListener('click', toggleChatMode); // GÖRSEL AKTİF
 
             // Görsel Yükleme
             ATTACHMENT_BTN.addEventListener('click', () => FILE_INPUT.click());
@@ -1575,4 +1648,3 @@
     </script>
 </body>
 </html>
-
