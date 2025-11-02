@@ -1,949 +1,1576 @@
-
-Şunu dedin:
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>N0thingAI - Ultra Modern Yapay Zeka Arayüzü</title>
-    <!-- Tailwind CSS CDN -->
+    <title>N0thingAI | Gemini Hybrid</title>
+    <!-- İkonlar için Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Highlight.js for code syntax highlighting -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    
+    <!-- TEMA FONTU (ChatGPT Stili) -->
     <style>
-        /* --- Özel Tema Renkleri (Grok/Cyberpunk Esintili Koyu Tema) --- */
+        /* CSS Değişkenleri - SİYAH/BEYAZ TEMA (ChatGPT Stili) */
         :root {
-            --color-primary-bg: #0F0F16; /* En Koyu Arka Plan */
-            --color-secondary-bg: #181822; /* Sidebar ve Bileşenler */
-            --color-accent: #06b6d4; /* Cyan-500 (Elektrik Mavisi Vurgu) */
-            --color-accent-dark: #0891b2; /* Cyan-600 */
-            --color-text: #E5E7EB; /* Gray 200 */
-            --color-bubble-ai: #21212B; /* AI Mesaj Baloncuğu - Daha koyu */
-            --color-bubble-user: #30303D; /* Kullanıcı Mesaj Baloncuğu - Daha morumsu */
+            /* Varsayılan: Koyu Tema */
+            --bg-primary: #202123; /* Ana Arkaplan */
+            --sidebar-bg: #0D0D0D; /* Kenar Çubuğu (Daha Koyu) */
+            --text-primary: #ECECEC; /* Ana Metin Rengi */
+            --text-secondary: #A6A6A6; /* İkincil Metin Rengi */
+            --highlight-color: #20C20E; /* N0thingAI Neon Yeşili */
+            --active-chat-bg: #2A2A2A; /* Aktif Sohbet Arkaplanı */
+            --ai-message-bg: #2A2A2A; /* AI Mesaj Arkaplanı */
+            --user-message-bg: #004d00; /* Kullanıcı Mesajı (Koyu Yeşil) */
+            --input-bg: #2A2A2A; /* Input Alanı Arkaplanı */
+            --input-border: #3A3A3A;
+            --shadow-color: rgba(0, 0, 0, 0.3); /* Koyu gölge */
+            --modal-bg: #1A1A1A;
+            --btn-border: #444;
+            --btn-hover: #333;
         }
 
-        /* Tüm uygulama genelinde koyu temayı zorla */
-        html {
-            color-scheme: dark;
-        }
-
-        /* Özel Scrollbar (Daha Şık) */
-        .chat-scroll-area::-webkit-scrollbar {
-            width: 8px;
-        }
-        .chat-scroll-area::-webkit-scrollbar-thumb {
-            background-color: transparent;
-            border-radius: 4px;
-        }
-        .chat-scroll-area:hover::-webkit-scrollbar-thumb {
-            background-color: #374151; /* Gray-700 */
-        }
-
-        /* Yazma Göstergesi Animasyonu (Modern Zıplayan Noktalar) */
-        .typing-dot {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            margin: 0 2px;
-            background-color: var(--color-accent); 
-            border-radius: 50%;
-            opacity: 0;
-            animation: bounce 1.4s infinite ease-in-out;
-            box-shadow: 0 0 5px var(--color-accent); /* Hafif Işıltı */
-        }
-        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
-        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
-        .typing-dot:nth-child(3) { animation-delay: 0s; }
-
-        @keyframes bounce {
-            0%, 80%, 100% {
-                transform: scale(0);
-                opacity: 0.5;
-            }
-            40% {
-                transform: scale(1.0);
-                opacity: 1;
-            }
-        }
-
-        /* Mesaj Girişi Odak Efekti */
-        #message-input:focus {
-            outline: none;
-        }
-
-        /* Active chat item border for a modern look */
-        .active-chat-item {
-            position: relative;
-            background-color: #083344; /* Cyan-900/40 */
-            border-left: 3px solid var(--color-accent);
-        }
-        .active-chat-item::before {
-            content: none; /* Yan çizgi artık border-left ile yönetiliyor */
+        /* İSTEK: Varsayılan Gri Arka Plan / Beyaz Yazı */
+        .dark-mode {
+            --bg-primary: #202123;      /* Koyu Gri Arka Plan */
+            --sidebar-bg: #1A1A1A;      /* Daha Koyu Gri Sidebar */
+            --text-primary: #ECECEC;    /* Beyazımsı Yazı */
+            --text-secondary: #A6A6A6;  /* Soluk Gri Yazı */
+            --highlight-color: #9E9E9E; /* Nötr Gri Vurgu */
+            --active-chat-bg: #2A2A2A;
+            --ai-message-bg: #2A2A2A;
+            --user-message-bg: #333333; /* Koyu Gri Kullanıcı Mesajı */
+            --input-bg: #2A2A2A;
+            --input-border: #3A3A3A;
+            --shadow-color: rgba(0, 0, 0, 0.3);
+            --modal-bg: #1A1A1A;
+            --btn-border: #444;
+            --btn-hover: #333;
         }
         
-        .glow-button {
-            transition: all 0.3s ease;
-            box-shadow: 0 0 10px rgba(6, 182, 212, 0.4);
+        /* İSTEK: İkincil Beyaz Arka Plan / Gri Yazı */
+        .light-mode {
+            --bg-primary: #FFFFFF;      /* Beyaz Arka Plan */
+            --sidebar-bg: #F9F9F9;
+            --text-primary: #333333;    /* Gri Yazı */
+            --text-secondary: #555;
+            --highlight-color: #555555; /* Koyu Gri Vurgu */
+            --active-chat-bg: #EAEAEA;
+            --ai-message-bg: #F0F0F0;
+            --user-message-bg: #EAEAEA; /* Açık Gri Kullanıcı Mesajı */
+            --input-bg: #FFFFFF;
+            --input-border: #E0E0E0;
+            --shadow-color: rgba(0, 0, 0, 0.05);
+            --modal-bg: #FFFFFF;
+            --btn-border: #E0E0E0;
+            --btn-hover: #F0F0F0;
         }
-        .glow-button:hover {
-            box-shadow: 0 0 15px rgba(6, 182, 212, 0.6);
+
+
+        /* Genel Stil */
+        body {
+            /* CHATGPT STİLİ FONT */
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .app-container { display: flex; height: 100vh; overflow: hidden; }
+        .sidebar {
+            width: 280px;
+            background-color: var(--sidebar-bg);
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+            border-right: 1px solid var(--input-border);
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        
+        /* N0thingAI Logosu */
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .logo-svg {
+            width: 32px;
+            height: 32px;
+            /* TEMA VURGU RENGİ (Gri) */
+            background-color: var(--highlight-color); 
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: var(--sidebar-bg); /* Arka planla aynı (siyah/beyaz) */
+            font-size: 20px;
+            padding-bottom: 2px; /* 'N' harfini ortalamak için */
+        }
+        .light-mode .logo-svg {
+            color: #FFFFFF; /* Açık temada logo harfi beyaz */
+        }
+        .dark-mode .logo-svg {
+            color: #FFFFFF; /* Koyu temada da logo harfi beyaz (kontrast için) */
+        }
+
+        .logo-text {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+
+        /* Yeni Sohbet Butonu */
+        .new-chat-btn {
+            padding: 10px 16px;
+            background-color: transparent;
+            border: 1px solid var(--btn-border);
+            color: var(--text-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+        }
+        .new-chat-btn:hover { background-color: var(--btn-hover); }
+        .new-chat-btn i { margin-right: 8px; }
+
+        /* Sohbet Geçmişi Alanı */
+        .chat-history {
+            flex-grow: 1;
+            overflow-y: auto;
+            margin-top: 1rem; /* Geri eklendi */
+        }
+        /* Geçmişteki sohbet item'ı */
+        .chat-item {
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 0.9em;
+            transition: background-color 0.2s, color 0.2s;
+            color: var(--text-secondary);
+        }
+        .chat-item.active {
+            background-color: var(--active-chat-bg);
+            color: var(--text-primary); /* Aktif metin daha parlak */
+            font-weight: 600;
+        }
+        .chat-item:not(.active):hover {
+            background-color: var(--btn-hover);
+        }
+        
+        /* Mod Göstergesi */
+        #current-mode-display {
+            border-color: var(--highlight-color);
+            color: var(--highlight-color);
+            background-color: color-mix(in srgb, var(--highlight-color) 10%, transparent);
+            text-align: center;
+            margin-bottom: 10px; /* Diğer item'lardan ayırmak için */
+        }
+
+        /* Profil ve Ayarlar (Dinamik Auth Alanı) */
+        .sidebar-footer {
+            border-top: 1px solid var(--input-border);
+            padding-top: 16px;
+        }
+        #auth-container { transition: all 0.3s; }
+        
+        /* Profil Görünümü (Oturum Açık) */
+        #user-profile-view {
+            transition: background-color 0.2s;
+        }
+        #user-profile-view:hover {
+            background-color: var(--active-chat-bg);
+        }
+        #profile-pic {
+            /* TEMA VURGU RENGİ (Gri) */
+            background-color: var(--highlight-color);
+        }
+        #profile-pic img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Giriş Yap Butonu (Oturum Kapalı) */
+        #login-btn {
+            background-color: var(--highlight-color);
+            color: #fff; 
+            font-weight: 700;
+            transition: background-color 0.2s;
+        }
+        .dark-mode #login-btn {
+            color: #1A1A1A; /* Koyu temada, gri buton üstü siyah yazı */
+        }
+        .light-mode #login-btn {
+            color: #FFFFFF; /* Açık temada, gri buton üstü beyaz yazı */
+        }
+        #login-btn:hover {
+            background-color: color-mix(in srgb, var(--highlight-color) 85%, black);
+        }
+
+
+        /* Sohbet Alanı */
+        .chat-area { flex-grow: 1; display: flex; flex-direction: column; position: relative; background-color: var(--bg-primary); }
+        .messages-container {
+            padding: 20px;
+            overflow-y: auto;
+            flex-grow: 1;
+            scroll-behavior: smooth;
+            padding-bottom: 120px; /* Input alanı için boşluk */
+        }
+
+        /* Mesaj Balonları */
+        .message-row { display: flex; margin-bottom: 24px; max-width: 90%; }
+        .message-content {
+            padding: 14px 20px;
+            border-radius: 18px;
+            line-height: 1.6;
+            word-wrap: break-word;
+            white-space: pre-wrap; /* Satır sonlarını koru */
+            position: relative;
+            box-shadow: 0 4px 12px var(--shadow-color);
+        }
+        
+        /* AI Mesajı */
+        .ai-message-row { justify-content: flex-start; }
+        .ai-message-row .message-content {
+            background-color: var(--ai-message-bg);
+            border-top-left-radius: 5px;
+            color: var(--text-primary);
+        }
+
+        /* Kullanıcı Mesajı */
+        .user-message-row { justify-content: flex-end; margin-left: auto; }
+        .user-message-row .message-content {
+            background-color: var(--user-message-bg);
+            color: var(--text-primary); 
+            border-top-right-radius: 5px;
+        }
+        .light-mode .user-message-row .message-content {
+             color: #202123; /* Açık temada kullanıcı metni */
+        }
+        .dark-mode .user-message-row .message-content {
+             color: var(--text-primary); /* Koyu temada kullanıcı metni */
+        }
+        
+        /* Sistem Mesajı */
+        .system-message-row { justify-content: center; max-width: 100%; }
+        .system-message-row .message-content {
+            background-color: transparent;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            font-style: italic;
+            text-align: center;
+            box-shadow: none;
+        }
+        .system-message-row .error {
+            color: #FF6B6B;
+            font-weight: 500;
+        }
+
+        /* Görsel Kutusu Stili */
+        .image-container {
+            max-width: 400px; /* Görsel boyutu */
+            margin-top: 10px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--input-border);
+        }
+        .image-container img { width: 100%; height: auto; display: block; }
+        
+        /* Eklenen (Yüklenen) Görsel Önizlemesi */
+        .attachment-preview {
+            display: none; /* JS ile yönetilir */
+            position: absolute;
+            bottom: 100%; /* Input alanının üstünde */
+            left: 50%;
+            transform: translateX(-50%);
+            margin-bottom: 10px;
+            padding: 8px;
+            background-color: var(--input-bg);
+            border: 1px solid var(--input-border);
+            border-radius: 12px;
+            box-shadow: 0 -4px 15px var(--shadow-color);
+            max-width: 300px;
+        }
+        .attachment-preview img {
+            max-height: 150px;
+            width: auto;
+            border-radius: 8px;
+        }
+        .attachment-preview .remove-attachment {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: #FF6B6B;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Girdi Kutusu (Input Area) */
+        .input-area-wrapper {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 24px;
+            background: linear-gradient(to top, var(--bg-primary) 70%, transparent);
+            pointer-events: none; /* Sadece sarmalayıcı için */
+        }
+        .input-area {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            background-color: var(--input-bg);
+            border: 1px solid var(--input-border);
+            border-radius: 16px;
+            box-shadow: 0 10px 30px var(--shadow-color);
+            pointer-events: auto; /* İçerik için */
+        }
+        
+        .input-area textarea {
+            flex-grow: 1;
+            padding: 10px 8px;
+            border: none;
+            background: transparent;
+            color: var(--text-primary);
+            font-size: 1rem;
+            outline: none;
+            resize: none; /* Yeniden boyutlandırmayı engelle */
+            max-height: 150px; /* Maksimum yükseklik */
+            overflow-y: auto; /* Gerekirse kaydır */
+            /* FONTU UYGULA */
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+        
+        .input-area textarea:disabled {
+            background-color: transparent;
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: color 0.2s, background-color 0.2s;
+        }
+        .icon-btn:hover:not(:disabled) {
+            color: var(--text-primary);
+            background-color: var(--btn-hover);
+        }
+        .icon-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        
+        .send-btn {
+            background-color: var(--highlight-color);
+            color: #fff;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            margin-left: 8px;
+            font-weight: 700;
+        }
+        .dark-mode .send-btn {
+            color: #1A1A1A; /* Koyu temada, gri buton üstü siyah yazı */
+        }
+        .send-btn:disabled {
+            background-color: var(--text-secondary);
+            opacity: 0.6;
+        }
+        .send-btn:not(:disabled):hover {
+             background-color: color-mix(in srgb, var(--highlight-color) 85%, black);
+        }
+
+        /* Yapay Zeka Yazma Animasyonu (Zıplayan Noktalar) */
+        .ai-typing-indicator {
+            display: none; /* JS ile yönetilir */
+            align-items: center;
+            height: 20px;
+            margin: 5px 0 15px 0;
+        }
+        .ai-typing-indicator.visible { display: flex; }
+        .dot {
+            width: 8px; height: 8px; background-color: var(--highlight-color); border-radius: 50%;
+            margin-right: 5px; animation: bounce 0.8s infinite;
+        }
+        .dot:nth-child(2) { animation-delay: 0.1s; }
+        .dot:nth-child(3) { animation-delay: 0.2s; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+
+        /* Modal Stilleri */
+        .modal { z-index: 50; }
+        .modal-overlay {
+            backdrop-filter: blur(5px);
+            transition: opacity 0.3s;
+        }
+        .modal-content {
+            background-color: var(--modal-bg);
+            color: var(--text-primary);
+            transition: background-color 0.3s, color 0.3s;
+            border: 1px solid var(--input-border);
+        }
+        .modal input {
+            background-color: var(--input-bg);
+            color: var(--text-primary);
+            border: 1px solid var(--input-border);
+            /* FONTU UYGULA */
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+        .social-btn {
+            border: 1px solid var(--btn-border);
+            transition: background-color 0.2s;
+        }
+        .social-btn:hover { background-color: var(--btn-hover); }
+        .light-mode .social-btn:hover { background-color: #E0E0E0; }
+
+        /* Responsive Tasarım */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: absolute;
+                left: -300px; /* Kapalı */
+                width: 280px;
+                height: 100%;
+                z-index: 40;
+                box-shadow: 4px 0 15px rgba(0,0,0,0.2);
+                transition: left 0.3s ease;
+            }
+            .sidebar.open {
+                left: 0; /* Açık */
+            }
+            .chat-area {
+                width: 100%;
+            }
+            /* Hamburger Menü (Chat Alanına Eklenir) */
+            .hamburger-btn {
+                position: absolute;
+                top: 15px;
+                left: 15px;
+                z-index: 30;
+                background-color: var(--input-bg);
+                border: 1px solid var(--input-border);
+                border-radius: 8px;
+                padding: 8px 10px;
+                box-shadow: 0 4px 10px var(--shadow-color);
+            }
+            /* Ekranı karartma */
+            .mobile-overlay {
+                position: absolute;
+                inset: 0;
+                background-color: rgba(0,0,0,0.5);
+                z-index: 39;
+                display: none; /* JS ile yönetilir */
+            }
+            .sidebar.open + .chat-area .mobile-overlay {
+                display: block;
+            }
+            .input-area-wrapper {
+                padding: 12px;
+            }
+            .input-area {
+                padding: 6px 8px;
+            }
+            .messages-container {
+                padding: 10px;
+                padding-top: 70px; /* Hamburger menü için boşluk */
+                padding-bottom: 100px;
+            }
+            .message-row {
+                max-width: 95%;
+            }
         }
     </style>
 </head>
-
-<body class="bg-[var(--color-primary-bg)] text-[var(--color-text)] overflow-hidden h-screen flex font-[Inter]">
-
-    <!-- 1. Sidebar (Gelişmiş Konuşma Menüsü) -->
-    <aside id="sidebar" class="fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out w-64 bg-[var(--color-secondary-bg)] flex flex-col z-20 shadow-2xl border-r border-gray-800">
-        
-        <!-- Sidebar Header (Logo ve Yeni Sohbet) -->
-        <div class="p-4 border-b border-gray-800 flex flex-col space-y-3">
-            <div class="flex items-center justify-between">
-                <h2 class="text-xl font-extrabold text-cyan-400 flex items-center">
-                    <i data-lucide="zap" class="w-5 h-5 mr-2"></i>
-                    N0thingAI
-                </h2>
-                <button id="close-sidebar-btn" class="md:hidden p-2 rounded-lg text-gray-400 hover:bg-gray-700 transition-colors">
-                    <i data-lucide="x" class="w-5 h-5"></i>
+<body class="dark-mode"> <!-- VARSAYILAN TEMA: KOYU (GRİ/BEYAZ) -->
+    <div class="app-container">
+        <!-- Sol Kenar Çubuğu -->
+        <aside class="sidebar" id="sidebar">
+            <header class="sidebar-header">
+                <div class="logo-container">
+                    <div class="logo-svg">N</div>
+                    <span class="logo-text">N0thingAI</span>
+                </div>
+                <!-- Mobil için Kapatma Butonu -->
+                <button class="icon-btn md:hidden" id="close-sidebar-btn">
+                    <i class="fas fa-times"></i>
                 </button>
-            </div>
-            
-            <!-- New Chat Button - Prominent -->
-            <button id="new-chat-btn" class="w-full flex items-center py-2 px-4 text-sm font-semibold rounded-xl text-gray-100 bg-[var(--color-accent)] hover:bg-[var(--color-accent-dark)] glow-button focus:outline-none focus:ring-4 focus:ring-cyan-500/50">
-                <i data-lucide="plus-circle" class="w-4 h-4 mr-2"></i>
-                Yeni Diyalog Başlat
+            </header>
+
+            <button class="new-chat-btn" id="new-chat-btn">
+                <i class="fas fa-plus"></i> Yeni Sohbet
             </button>
-        </div>
 
-        <!-- Conversation History List -->
-        <div class="p-3 space-y-1 flex-grow overflow-y-auto chat-scroll-area">
-            <p class="text-xs text-gray-500 uppercase font-bold mb-2 ml-1">Kayıtlı Diyaloglar</p>
-            <div id="history-list" class="space-y-1">
-                <!-- History items will be inserted here by JS -->
-            </div>
-        </div>
+            <!-- Sohbet Geçmişi (Geri Eklendi) -->
+            <nav class="chat-history">
+                <ul id="chat-history-list" class="space-y-1">
+                    <li id="current-mode-display" class="text-xs px-3 py-2 rounded-lg font-semibold border" >
+                        Sohbet Modu
+                    </li>
+                    <!-- Geçmiş buraya dinamik olarak yüklenecek -->
+                </ul>
+            </nav>
 
-        <!-- User/Settings Area (Oturum Yönetimi Simülasyonu) -->
-        <div class="p-4 border-t border-gray-800">
-            <button id="open-settings-btn" class="w-full flex items-center p-2 rounded-xl transition-colors bg-gray-700/30 hover:bg-gray-700/50">
-                <div class="w-8 h-8 rounded-full bg-cyan-600 flex items-center justify-center text-sm font-bold text-white shadow-md mr-3">
-                    N0
-                </div>
-                <div class="flex-grow text-left">
-                    <p class="text-sm font-medium text-gray-100 truncate">N0thing Kullanıcısı</p>
-                    <p class="text-xs text-gray-400">Yüksek Erişim Modu</p>
-                </div>
-                <i data-lucide="cog" class="w-4 h-4 text-gray-400 ml-2"></i>
-            </button>
-        </div>
-    </aside>
-
-    <!-- 2. Main Chat Area (Ana İçerik) -->
-    <main class="flex-grow flex flex-col h-full relative bg-[var(--color-primary-bg)]">
-        
-        <!-- Mobile Sidebar Toggle & Header -->
-        <header class="p-3 md:hidden border-b border-gray-800 flex justify-between items-center bg-[var(--color-secondary-bg)] z-10 sticky top-0 shadow-lg">
-            <button id="open-sidebar-btn" class="p-2 rounded-lg text-gray-300 hover:bg-gray-700 transition-colors">
-                <i data-lucide="menu" class="w-6 h-6"></i>
-            </button>
-            <h1 class="text-lg font-bold text-gray-100">N0thingAI</h1>
-            <div class="w-10"></div>
-        </header>
-
-        <!-- Message Feed (Sohbet İçeriği) -->
-        <div id="message-feed" class="flex-grow chat-scroll-area overflow-y-auto p-4 md:p-8 space-y-8 pb-32">
-            <!-- Initial welcome message -->
-            <div class="max-w-3xl mx-auto p-4 rounded-xl shadow-lg" style="background-color: var(--color-bubble-ai);">
-                <p class="text-lg font-semibold text-cyan-400 mb-2">Ben N0thingAI. Görev Tanımlandı!</p>
-                <p class="text-sm text-gray-300">
-                    Arayüz ve sisteminiz Grok estetiğiyle yeniden yapılandırıldı. Hızlı, keskin ve doğrudan yanıtlar için hazırım.
-                    <br>
-                    <small class="text-gray-500">
-                        (Ne sormak istediğinizi yazın. Hatta bir kod bloğu isteyin, Markdown'ı da geliştirdim!)
-                    </small>
-                </p>
-            </div>
-            <!-- Messages will be injected here -->
-        </div>
-
-        <!-- Input Area (Modern Giriş Kutusu) -->
-        <footer class="absolute bottom-0 left-0 right-0 p-4 flex justify-center z-10 bg-[var(--color-primary-bg)]">
-            <div class="w-full max-w-4xl">
-                <div id="input-area" class="relative flex items-end p-2 bg-[var(--color-secondary-bg)] rounded-2xl shadow-2xl transition-all duration-300 ease-in-out border border-gray-700 focus-within:ring-2 focus-within:ring-[var(--color-accent)]/50">
-                    <textarea id="message-input" rows="1" placeholder="N0thingAI'ye bir komut verin (Shift + Enter: Yeni Satır, Enter: Gönder)"
-                        class="flex-grow resize-none overflow-y-hidden bg-transparent border-none focus:outline-none p-2 text-base text-gray-100 placeholder-gray-500 transition-all duration-150"></textarea>
+            <!-- Profil ve Ayarlar (Dinamik Auth Alanı) -->
+            <footer class="sidebar-footer">
+                <div id="auth-container" class="w-full">
                     
-                    <button id="send-btn" disabled
-                        class="p-2 ml-2 mb-0.5 rounded-xl bg-[var(--color-accent)] text-white disabled:bg-[var(--color-accent)]/40 disabled:text-gray-200/50 disabled:cursor-not-allowed hover:bg-[var(--color-accent-dark)] glow-button">
-                        <i data-lucide="send" class="w-5 h-5"></i>
-                    </button>
-                </div>
-                <p class="text-center text-xs text-gray-500 mt-2">
-                    N0thingAI. İsteklerinizle sınırları zorlayın.
-                </p>
-            </div>
-        </footer>
-    </main>
-    
-    <!-- 3. Settings Modal (Ayarlar ve Oturum Simülasyonu) -->
-    <div id="settings-modal" class="fixed inset-0 bg-black/80 z-30 hidden items-center justify-center p-4 transition-opacity duration-300">
-        <div class="bg-[var(--color-secondary-bg)] p-6 rounded-xl shadow-2xl max-w-lg w-full transform scale-95 transition-transform duration-300 border border-gray-700/50" role="dialog">
-            <div class="flex items-center justify-between border-b border-gray-700 pb-3 mb-4">
-                <h3 class="text-xl font-bold text-cyan-400 flex items-center">
-                    <i data-lucide="settings" class="w-5 h-5 mr-2 text-cyan-400"></i>
-                    Sistem Ayarları & Oturum
-                </h3>
-                <button id="close-settings-btn" class="text-gray-500 hover:text-cyan-400 transition-colors">
-                    <i data-lucide="x" class="w-6 h-6"></i>
-                </button>
-            </div>
-            
-            <div class="space-y-4">
-                <!-- Oturum Durumu (Grok-vari) -->
-                <div class="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
-                    <h4 class="text-lg font-semibold mb-2 text-cyan-300">Oturum Protokolü</h4>
-                    <p class="text-sm text-gray-400 mb-3">Aktif Kullanıcı: N0thing Kullanıcısı (Kimlik Doğrulandı)</p>
-                    <button class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium">
-                        <i data-lucide="power" class="w-4 h-4 mr-1 inline"></i> Oturumu Sonlandır
-                    </button>
-                </div>
-
-                <!-- Model Ayarları -->
-                <div class="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
-                    <h4 class="text-lg font-semibold mb-2 text-cyan-300">N0thingAI Model Yapılandırması</h4>
-                    <label class="block mb-2">
-                        <span class="text-sm text-gray-300">Yanıt Hızı/Detay Düzeyi:</span>
-                        <select class="w-full mt-1 p-2 rounded-lg bg-gray-700 border-gray-600 text-gray-200">
-                            <option>Hızlı (Kısa ve Keskin)</option>
-                            <option selected>Dengeli (Optimal)</option>
-                            <option>Detaylı (Kapsamlı Analiz)</option>
-                        </select>
-                    </label>
-                    <label class="flex items-center space-x-3 text-sm text-gray-300 mt-3">
-                        <input type="checkbox" checked class="form-checkbox text-cyan-600 bg-gray-700 border-gray-600 rounded">
-                        <span>Argümanlarda "Grok-Stili" Mizahı Etkinleştir (Simüle)</span>
-                    </label>
-                </div>
-
-                <!-- Tema Seçimi -->
-                <div class="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
-                    <h4 class="text-lg font-semibold mb-2 text-cyan-300">Arayüz Görünümü</h4>
-                    <div class="flex items-center justify-between">
-                        <p class="text-sm text-gray-300" id="current-theme-text">Aktif Tema: Koyu (Gece Modu)</p>
-                        <button id="theme-toggle-btn" class="flex items-center px-3 py-1 bg-gray-700 text-gray-200 rounded-full hover:bg-gray-600 transition-colors text-sm">
-                            <i id="theme-icon" data-lucide="moon" class="w-4 h-4 mr-2"></i>
-                            Temayı Değiştir
+                    <!-- Oturum Açıkken (Giriş yapıldıktan sonra görünür) -->
+                    <div id="user-profile-view" class="hidden flex items-center justify-between cursor-pointer p-2 rounded-lg" onclick="window.openSettingsModal()">
+                        <div class="flex items-center space-x-3 min-w-0">
+                            <span id="profile-pic" class="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center font-bold text-sm"></span>
+                            <span id="user-name" class="text-sm font-semibold truncate">Kullanıcı Adı</span>
+                        </div>
+                        <i class="fas fa-cog text-lg opacity-70"></i>
+                    </div>
+                    
+                    <!-- Oturum Kapalıyken (Varsayılan görünüm) -->
+                    <div id="login-view" class="">
+                        <button id="login-btn" class="w-full py-3 login-btn rounded-xl font-semibold" onclick="window.openSettingsModal()">
+                            Giriş Yap / Kayıt Ol
                         </button>
                     </div>
+
                 </div>
+            </footer>
+        </aside>
+
+        <!-- Sohbet Alanı -->
+        <main class="chat-area">
+            <!-- Mobil Hamburger Menü Butonu -->
+            <button class="icon-btn hamburger-btn md:hidden" id="open-sidebar-btn">
+                <i class="fas fa-bars"></i>
+            </button>
+            <!-- Mobil Overlay (Sidebar açıkken) -->
+            <div class="mobile-overlay md:hidden" id="mobile-overlay"></div>
+
+            <div class="messages-container" id="messages-container">
+                <!-- Başlangıç Mesajı (JS ile oluşturulur) -->
             </div>
             
-            <div class="mt-6 flex justify-end">
-                <button id="close-settings-modal-footer" class="px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg hover:bg-[var(--color-accent-dark)] glow-button font-medium">
-                    Kapat
-                </button>
+            <!-- Yazma Animsyonu (Buraya taşınır) -->
+            <div class="ai-typing-indicator" id="typing-indicator">
+                <span class="dot"></span>
+                <span class="dot"></span>
+                <span class="dot"></span>
+                <span id="loading-text" class="ml-2 text-sm" style="color: var(--text-secondary);"></span>
             </div>
+
+            <!-- Eklenen Görsel Önizlemesi -->
+            <div class="attachment-preview" id="attachment-preview">
+                <img id="preview-image" src="" alt="Ek önizlemesi">
+                <button class="remove-attachment" id="remove-attachment-btn">&times;</button>
+            </div>
+
+            <!-- Girdi Kutusu (Input Area) -->
+            <div class="input-area-wrapper">
+                <div class="input-area">
+                    
+                    <!-- Ataş (Dosya Yükleme) butonu -->
+                    <button class="icon-btn" id="attachment-btn" title="Dosya Ekle (Görsel Analiz)">
+                        <i class="fas fa-paperclip"></i>
+                    </button>
+                    <input type="file" id="file-input" accept="image/*" class="hidden">
+
+                    <!-- Görsel Oluşturma butonu -->
+                    <button class="icon-btn" id="image-mode-btn" title="Görsel Oluşturma Modu (Bakımda)">
+                        <i class="fas fa-palette"></i>
+                    </button>
+
+                    <textarea id="chat-input" placeholder="N0thingAI'a bir mesaj gönder..." rows="1"></textarea>
+                    
+                    <button class="send-btn icon-btn" title="Gönder" id="send-btn">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Ayarlar ve Giriş Modalı -->
+    <div id="settings-modal" class="modal hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center modal-overlay">
+        <div class="p-6 rounded-xl shadow-2xl w-full max-w-md modal-content relative">
+            
+            <!-- GİRİŞ YAP EKRANI (Varsayılan) -->
+            <div id="modal-login-view" class="">
+                <h2 class="text-xl font-bold mb-4 text-center">Giriş Yap</h2>
+                <p class="text-center text-sm opacity-80 mb-4" style="color: var(--text-secondary);">Ayarlarınıza erişmek için giriş yapın.</p>
+                
+                <!-- HATA MESAJI ALANI (E-POSTA İÇİN) -->
+                <p id="auth-error-message" class="text-center text-sm text-red-500 mb-4 hidden"></p>
+
+                <div class="space-y-4">
+                    <!-- SOSYAL GİRİŞ (KALDIRILDI) -->
+                    <!--
+                    <button id="google-signin-btn" class="w-full py-3 rounded-lg font-semibold social-btn flex items-center justify-center">
+                        <i class="fab fa-google mr-3"></i> Google ile Giriş Yap
+                    </button>
+                    <button id="apple-signin-btn" class="w-full py-3 rounded-lg font-semibold social-btn flex items-center justify-center">
+                        <i class="fab fa-apple mr-3"></i> Apple ile Giriş Yap
+                    </button>
+                    <div class="relative my-6">
+                        <div class="absolute inset-0 flex items-center">
+                            <div class="w-full border-t" style="border-color: var(--input-border);"></div>
+                        </div>
+                        <div class="relative flex justify-center text-sm">
+                            <span class="px-2" style="background-color: var(--modal-bg); color: var(--text-secondary);">veya</span>
+                        </div>
+                    </div>
+                    -->
+
+                    <!-- Email/Şifre Alanı -->
+                    <input id="email-input" type="email" placeholder="Email adresiniz" class="w-full p-3 rounded-lg border">
+                    <input id="password-input" type="password" placeholder="Şifreniz" class="w-full p-3 rounded-lg border">
+                    
+                    <button id="email-signin-btn" class="w-full py-3 login-btn rounded-xl font-semibold">
+                        Email ile Giriş Yap
+                    </button>
+                    <p class="text-xs text-center" style="color: var(--text-secondary);">
+                        Hesabınız yok mu? 
+                        <button id="show-signup-btn" class="font-bold underline hover:opacity-100" style="color: var(--text-primary);">Yeni Hesap Oluşturun</button>
+                    </p>
+                </div>
+            </div>
+
+            <!-- KAYIT OL EKRANI -->
+            <div id="modal-signup-view" class="hidden">
+                <h2 class="text-xl font-bold mb-4 text-center">Yeni Hesap Oluştur</h2>
+                <!-- HATA MESAJI ALANI (KAYIT İÇİN) -->
+                <p id="signup-error-message" class="text-center text-sm text-red-500 mb-4 hidden"></p>
+
+                <input id="signup-email-input" type="email" placeholder="Email adresiniz" class="w-full p-3 rounded-lg border mb-4">
+                <input id="signup-password-input" type="password" placeholder="Yeni şifreniz" class="w-full p-3 rounded-lg border mb-4">
+                <button id="signup-btn" class="w-full py-3 login-btn rounded-xl font-semibold">
+                    Kayıt Ol (Sign Up)
+                </button>
+                <p class="text-xs text-center mt-4" style="color: var(--text-secondary);">
+                    Zaten bir hesabınız var mı? 
+                    <button id="show-signin-btn" class="font-bold underline hover:opacity-100" style="color: var(--text-primary);">Giriş Yapın</button>
+                </p>
+            </div>
+
+
+            <!-- Ayarlar Ekranı (Oturum Açıkken) -->
+            <div id="modal-settings-view" class="hidden">
+                 <h2 class="text-xl font-bold mb-6" id="modal-title-settings">Ayarlar</h2>
+                 <div class="mb-4">
+                    <label for="theme-selector" class="block text-sm font-medium mb-2" style="color: var(--text-secondary);">Tema Seçimi</label>
+                    <select id="theme-selector" class="w-full p-3 rounded-lg border" style="background-color: var(--input-bg); color: var(--text-primary); border-color: var(--input-border);">
+                        <!-- Düzeltildi: Varsayılan Gri/Beyaz Tema -->
+                        <option value="dark-mode">Koyu Tema (Gri/Beyaz)</option> 
+                        <option value="light-mode">Açık Tema (Beyaz/Gri)</option>
+                    </select>
+                 </div>
+                 <button id="signout-btn" class="w-full p-3 mt-4 rounded-lg font-semibold border" style="border-color: var(--btn-border); transition: background-color 0.2s;">
+                    <i class="fas fa-sign-out-alt mr-2"></i> Çıkış Yap
+                 </button>
+            </div>
+            
+            <button onclick="window.closeSettingsModal()" class="absolute top-4 right-4 text-xl opacity-70 hover:opacity-100" style="color: var(--text-secondary);">
+                <i class="fas fa-times"></i>
+            </button>
         </div>
     </div>
     
-    <!-- 4. Alert Modal (Hata/Uyarı) -->
-    <div id="alert-modal" class="fixed inset-0 bg-black/70 z-30 hidden items-center justify-center p-4">
-        <div class="bg-[var(--color-secondary-bg)] p-6 rounded-xl shadow-2xl max-w-sm w-full transform transition-all scale-100 border border-gray-700" role="alert">
-            <div class="flex items-center justify-between mb-4">
-                <h3 id="alert-title" class="text-lg font-bold text-red-400 flex items-center">
-                    <i data-lucide="alert-triangle" class="w-5 h-5 mr-2"></i>
-                    Hata Başlığı
-                </h3>
-                <button id="close-alert-btn" class="text-gray-500 hover:text-gray-300 transition-colors">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
-            </div>
-            <p id="alert-message" class="text-sm text-gray-300">
-                Hata mesajı burada görünecek.
-            </p>
-        </div>
-    </div>
+    <script type="module">
+        // Firebase ve Google API Entegrasyonu
+        // --- FIRESTORE IMPORTLARI YENİDEN EKLENDİ ---
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { 
+            getAuth, signInAnonymously, 
+            onAuthStateChanged, signOut,
+            createUserWithEmailAndPassword, // Email ile kayıt için
+            signInWithEmailAndPassword // Email ile giriş için
+            // SOSYAL GİRİŞ IMPORTLARI KALDIRILDI
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        // --- FIRESTORE IMPORTLARI (Geçmiş için) ---
+        import { 
+            getFirestore, doc, setDoc, addDoc, collection, onSnapshot, 
+            query, orderBy, serverTimestamp, getDocs 
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    <!-- JavaScript Logic -->
-    <script>
-        // --- 1. GLOBAL SETUP & CONSTANTS ---
-        const API_KEY = ""; 
-        const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=" + API_KEY;
-        const MAX_RETRIES = 5;
-
-        // --- 2. DOM ELEMENTS ---
-        const body = document.body;
-        const sidebar = document.getElementById('sidebar');
-        const openSidebarBtn = document.getElementById('open-sidebar-btn');
-        const closeSidebarBtn = document.getElementById('close-sidebar-btn');
-        const themeToggleBtn = document.getElementById('theme-toggle-btn');
-        const themeIcon = document.getElementById('theme-icon');
-        const messageFeed = document.getElementById('message-feed');
-        const messageInput = document.getElementById('message-input');
-        const sendBtn = document.getElementById('send-btn');
-        const newChatBtn = document.getElementById('new-chat-btn');
-        const historyList = document.getElementById('history-list');
-        const alertModal = document.getElementById('alert-modal');
-        const closeAlertBtn = document.getElementById('close-alert-btn');
-        const alertTitle = document.getElementById('alert-title');
-        const alertMessage = document.getElementById('alert-message');
-        const openSettingsBtn = document.getElementById('open-settings-btn');
-        const settingsModal = document.getElementById('settings-modal');
-        const closeSettingsBtn = document.getElementById('close-settings-btn');
-        const closeSettingsModalFooter = document.getElementById('close-settings-modal-footer');
-        const currentThemeText = document.getElementById('current-theme-text');
+        // --- API Keys ve Modeller ---
+        // KULLANICININ ANA API ANAHTARI (GEMINI)
+        const GEMINI_CHAT_API_KEY = "AIzaSyCx4u1qHGlysIGpm1Zw0YBfXlqEXJ1BlvM"; // Sohbet ve Analiz için
+        // GÖRSEL OLUŞTURMA API ANAHTARI (BAKIMDA - KULLANILMIYOR)
+        // const IMAGE_GEN_API_KEY = "FPSXff56d91f1709400bf5a9bb42e5b4a717"; 
         
-        const AI_BUBBLE_BG = 'var(--color-bubble-ai)';
-        const USER_BUBBLE_BG = 'var(--color-bubble-user)';
-        const ACCENT_COLOR = 'var(--color-accent)';
-
-        let isTyping = false;
-        let currentChatId = localStorage.getItem('currentChatId') || crypto.randomUUID();
-        let chats = JSON.parse(localStorage.getItem('chats')) || {};
+        const CHAT_MODEL = "gemini-2.5-flash-preview-09-2025";
+        // const IMAGE_GEN_MODEL = "imagen-3.0-generate-002"; // Veya DeepSeek/SD
         
-        // --- 3. UTILITY FUNCTIONS (Markdown, Theme, Scroll) ---
+        // --- KULLANICININ YENİ FIREBASE CONFIG BİLGİSİ ---
+        const firebaseConfig = {
+          apiKey: "AIzaSyAUM0DoLRAUoXsAxbcJOrerJIb_vT0GhS4",
+          authDomain: "n0thingai-e8f3c.firebaseapp.com",
+          projectId: "n0thingai-e8f3c",
+          storageBucket: "n0thingai-e8f3c.firebasestorage.app",
+          messagingSenderId: "266636496490",
+          appId: "1:266636496490:web:b5250f6ba01a66bf860413"
+          // measurementId Gerekli değil
+        };
+        
+        // Firebase Servislerini Başlatma
+        let app, auth, db;
+        try {
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app); // Firestore (veritabanı) geri eklendi
+            console.log("Firebase başarıyla başlatıldı."); // Başarı logu
+        } catch (e) {
+            console.error("Firebase başlatılamadı:", e);
+            renderSystemMessage("**HATA:** Kimlik doğrulama servisi yüklenemedi.", "error");
+        }
+        
+        // --- DOM Elements ---
+        const MESSAGES_CONTAINER = document.getElementById('messages-container');
+        const CHAT_INPUT = document.getElementById('chat-input');
+        const SEND_BTN = document.getElementById('send-btn');
+        const IMAGE_MODE_BTN = document.getElementById('image-mode-btn'); // Palet ikonu
+        const NEW_CHAT_BTN = document.getElementById('new-chat-btn');
+        const CURRENT_MODE_DISPLAY = document.getElementById('current-mode-display');
+        const TYPING_INDICATOR = document.getElementById('typing-indicator');
+        const LOADING_TEXT = document.getElementById('loading-text');
+        
+        // Sohbet Geçmişi Listesi (Geri Eklendi)
+        const CHAT_HISTORY_LIST = document.getElementById('chat-history-list');
+
+        // Attachment (Görsel Yükleme) Elements
+        const ATTACHMENT_BTN = document.getElementById('attachment-btn');
+        const FILE_INPUT = document.getElementById('file-input');
+        const ATTACHMENT_PREVIEW = document.getElementById('attachment-preview');
+        const PREVIEW_IMAGE = document.getElementById('preview-image');
+        const REMOVE_ATTACHMENT_BTN = document.getElementById('remove-attachment-btn');
+        
+        // Auth/Modal Elements
+        const AUTH_CONTAINER = document.getElementById('auth-container');
+        const USER_PROFILE_VIEW = document.getElementById('user-profile-view');
+        const LOGIN_VIEW = document.getElementById('login-view'); 
+        const PROFILE_PIC = document.getElementById('profile-pic');
+        const USER_NAME = document.getElementById('user-name');
+        
+        const SETTINGS_MODAL = document.getElementById('settings-modal');
+        const MODAL_LOGIN_VIEW = document.getElementById('modal-login-view');
+        const MODAL_SIGNUP_VIEW = document.getElementById('modal-signup-view');
+        const MODAL_SETTINGS_VIEW = document.getElementById('modal-settings-view');
+        const THEME_SELECTOR = document.getElementById('theme-selector');
+        
+        // Hata Mesajı Alanları
+        const AUTH_ERROR_MESSAGE = document.getElementById('auth-error-message');
+        const SIGNUP_ERROR_MESSAGE = document.getElementById('signup-error-message');
+
+        // Giriş/Kayıt Butonları
+        // SOSYAL GİRİŞ BUTONLARI KALDIRILDI
+        const EMAIL_INPUT = document.getElementById('email-input');
+        const PASSWORD_INPUT = document.getElementById('password-input');
+        const EMAIL_SIGNIN_BTN = document.getElementById('email-signin-btn');
+        const SIGNUP_BTN = document.getElementById('signup-btn');
+        const SIGNOUT_BTN = document.getElementById('signout-btn');
+        const SHOW_SIGNUP_BTN = document.getElementById('show-signup-btn');
+        const SHOW_SIGNIN_BTN = document.getElementById('show-signin-btn');
+        const SIGNUP_EMAIL_INPUT = document.getElementById('signup-email-input');
+        const SIGNUP_PASSWORD_INPUT = document.getElementById('signup-password-input');
+
+        // Mobil Sidebar
+        const SIDEBAR = document.getElementById('sidebar');
+        const OPEN_SIDEBAR_BTN = document.getElementById('open-sidebar-btn');
+        const CLOSE_SIDEBAR_BTN = document.getElementById('close-sidebar-btn');
+        const MOBILE_OVERLAY = document.getElementById('mobile-overlay');
+
+
+        // --- Global State (Geçmiş Eklendi) ---
+        let chatMode = 'text'; // 'text' (Chat) or 'image' (Generation)
+        let isWaitingForResponse = false;
+        let attachedImageBase64 = null; // Base64 string for multimodal chat
+        
+        let currentUserId = null; // Firebase Auth User ID
+        let currentChatId = null; // Aktif sohbetin Firestore ID'si
+        let unsubscribeChat = null; // Aktif sohbet dinleyicisini
+        let unsubscribeHistory = null; // Sohbet listesi dinleyicisini
 
         /**
-         * Basit Markdown'ı HTML'e dönüştürür. Code blokları için Highlight.js kullanır.
+         * API Çağrısını Üstlenir (Gemini/Imagen)
+         * model: 'gemini' or 'imagen'
+         * payload: API'ye gönderilecek JSON gövdesi
+         * apiKey: Kullanılacak API anahtarı
          */
-        function markdownToHtml(markdown) {
-            let html = markdown
-                .replace(/^### (.*$)/gim, '<h3 class="text-lg font-semibold mt-4 mb-2">$1</h3>')
-                .replace(/^## (.*$)/gim, '<h2 class="text-xl font-bold mt-5 mb-3">$1</h2>')
-                .replace(/^# (.*$)/gim, '<h1 class="text-2xl font-extrabold mt-6 mb-4">$1</h1>')
-                .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
-                .replace(/\*(.*?)\*/gim, '<em>$1</em>');
+        async function fetchWithRetry(model, payload, apiKey) {
+            let url = '';
+            if (model === 'gemini') {
+                url = `https://generativelanguage.googleapis.com/v1beta/models/${CHAT_MODEL}:generateContent?key=${apiKey}`;
+            } else {
+                // Görsel oluşturma (Bakımda olduğu için bu kısım çağrılmayacak)
+                // url = `https://api.deepseek.com/v1/images/generations`; // Örnek DeepSeek/Imagen URL
+                renderSystemMessage("Görsel oluşturma modu şu anda bakımda.", "error");
+                return null;
+            }
 
-            // Code blocks (triple backticks)
-            html = html.replace(/
-(\w*)\n([\s\S]*?)
-/g, (match, lang, code) => {
-                const language = lang.trim() || 'plaintext';
-                const escapedCode = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                
-                let highlightedCode;
+            const MAX_RETRIES = 3;
+            let attempt = 0;
+
+            while (attempt < MAX_RETRIES) {
                 try {
-                    highlightedCode = hljs.highlight(escapedCode, { language: language }).value;
-                } catch (e) {
-                    highlightedCode = escapedCode;
-                }
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            // DeepSeek/OpenAI stili için: 'Authorization': `Bearer ${apiKey}`
+                        },
+                        body: JSON.stringify(payload)
+                    });
 
-                return <pre class="hljs rounded-xl my-4 p-4 overflow-x-auto"><code class="language-${language} block">${highlightedCode}</code></pre>;
-            });
-
-            // Handle lists
-            html = html.replace(/(\r?\n|^)([*-]|\d+\.) (.*)/g, (match, p1, p2, p3) => {
-                if (p2.match(/\d+\./)) {
-                    return ${p1}<li class="ml-6 list-decimal">${p3}</li>;
-                }
-                return ${p1}<li class="ml-6 list-disc">${p3}</li>;
-            }).replace(/(<\/li>\s*<li[^>]*>)/gi, '').replace(/(\n|^)<li/g, (match, p1) => {
-                return (p1.match(/\n\n/) ? '\n\n' : '\n') + '<li';
-            }).replace(/(\r?\n){2,}(<li|<\/ul>|<ol>)/g, (match, p1, p2) => p2);
-
-            html = html.replace(/(\n|^)(\*|\-) (.*)/g, (match, p1, p2, p3) => ${p1}<li>${p3}</li>).replace(/(\n|^)\d+\. (.*)/g, (match, p1, p2) => ${p1}<ol><li>${p2}</li></ol>);
-            
-            // Final list grouping (simplistic but works for this level)
-            html = html.replace(/(<\/li>)\s*<li>/g, '$1').replace(/(<\/ul>)\s*<ul>/g, '$1').replace(/(<\/ol>)\s*<ol>/g, '$1');
-            html = html.replace(/(\n|^)<li>(.*?)<\/li>/g, (match, p1, p2) => {
-                const isList = p1.includes('ul') || p1.includes('ol');
-                if (isList) return match;
-                return ${p1}<ul class="list-disc pl-5 my-2"><li>${p2}</li></ul>;
-            });
-
-            // Replace remaining double newlines with paragraphs
-            html = html.split('\n\n').map(p => {
-                if (p.trim() !== '' && !p.startsWith('<h') && !p.startsWith('<pre') && !p.startsWith('<ul') && !p.startsWith('<ol') && !p.startsWith('<li>') ) {
-                    return <p class="mb-3 last:mb-0">${p.trim()}</p>;
-                }
-                return p;
-            }).join('\n');
-            
-            html = html.replace(/(\n{2,})/g, '\n');
-
-            return html;
-        }
-
-        /**
-         * Özelleştirilmiş bir uyarı penceresi görüntüler.
-         */
-        function showAlert(title, message) {
-            alertTitle.innerHTML = <i data-lucide="alert-triangle" class="w-5 h-5 mr-2"></i> ${title};
-            alertMessage.textContent = message;
-            alertModal.classList.remove('hidden');
-            alertModal.classList.add('flex');
-            lucide.createIcons();
-        }
-
-        /**
-         * Temayı uygular (Simüle edilmiş - sadece Dark Mode)
-         */
-        function applyTheme(isDark) {
-            // Şu an sadece Dark Mode mevcut, ancak toggle simülasyonu için yapıyı koruyoruz.
-            if (isDark) {
-                localStorage.setItem('theme', 'dark');
-                currentThemeText.textContent = 'Aktif Tema: Koyu (Gece Modu)';
-                themeIcon.setAttribute('data-lucide', 'moon');
-            } else {
-                 localStorage.setItem('theme', 'light');
-                 currentThemeText.textContent = 'Aktif Tema: Açık (Simüle)';
-                 themeIcon.setAttribute('data-lucide', 'sun');
-            }
-            lucide.createIcons(); 
-        }
-
-        function toggleTheme() {
-            const currentTheme = localStorage.getItem('theme') === 'dark';
-            applyTheme(!currentTheme);
-        }
-
-        function loadTheme() {
-            const savedTheme = localStorage.getItem('theme');
-            applyTheme(savedTheme === 'dark');
-        }
-
-        /**
-         * Metin alanı yüksekliğini içeriğe göre ayarlar.
-         */
-        function adjustInputHeight() {
-            messageInput.style.height = 'auto';
-            messageInput.style.height = (messageInput.scrollHeight > 200 ? 200 : messageInput.scrollHeight) + 'px';
-        }
-
-        /**
-         * Mesaj akışını en alta kaydırır.
-         */
-        function scrollToBottom() {
-            messageFeed.scrollTo({
-                top: messageFeed.scrollHeight,
-                behavior: 'smooth'
-            });
-        }
-
-        // --- 4. CHAT RENDERING ---
-
-        /**
-         * Tek bir sohbet mesajı için HTML yapısını oluşturur.
-         */
-        function createMessageElement(message) {
-            const isUser = message.role === 'user';
-            
-            const containerClass = isUser ? 'justify-end' : 'justify-start';
-            const bubbleBg = isUser ? USER_BUBBLE_BG : AI_BUBBLE_BG;
-            const icon = isUser 
-                ? <i data-lucide="user" class="w-5 h-5 text-gray-400"></i> 
-                : <i data-lucide="zap" class="w-5 h-5 text-cyan-400"></i>;
-            
-            const messageEl = document.createElement('div');
-            messageEl.className = flex ${containerClass} max-w-full group; 
-            
-            // Avatar ve İçerik sırası
-            const innerFlex = document.createElement('div');
-            innerFlex.className = flex ${isUser ? 'flex-row-reverse' : 'flex-row'} items-start space-x-3 max-w-[90%] md:max-w-[70%];
-
-            // Avatar
-            const avatar = document.createElement('div');
-            avatar.className = p-2 ${isUser ? 'bg-gray-700/50' : 'bg-cyan-600/50'} rounded-full mt-1.5 flex-shrink-0 shadow-md;
-            avatar.innerHTML = icon;
-
-            // Content bubble
-            const contentWrapper = document.createElement('div');
-            contentWrapper.className = flex flex-col ${isUser ? 'items-end' : 'items-start'};
-
-            const contentEl = document.createElement('div');
-            contentEl.style.backgroundColor = bubbleBg; 
-            
-            // YAZMA GÖSTERGESİ İÇİN ÖZEL KOŞUL
-            if (message.content === '<typing-indicator>') {
-                 contentEl.className = px-4 py-3 rounded-xl transition-all duration-300 inline-block text-left shadow-lg border border-gray-700 w-auto;
-                 contentEl.innerHTML = 
-                    <div class="flex items-center space-x-1">
-                        <span class="typing-dot"></span>
-                        <span class="typing-dot"></span>
-                        <span class="typing-dot"></span>
-                    </div>
-                ;
-            } else {
-                contentEl.className = px-4 py-3 rounded-xl transition-all duration-300 inline-block text-left whitespace-pre-wrap text-sm shadow-xl border border-gray-700/50 relative group/bubble;
-                contentEl.style.wordBreak = 'break-word';
-
-                if (isUser) {
-                    contentEl.textContent = message.content;
-                } else {
-                    contentEl.innerHTML = markdownToHtml(message.content);
+                    if (response.status === 503) { // Model yükleniyor (HF/Bazı API'ler)
+                        throw new Error("503");
+                    }
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(`API Hatası (${response.status}): ${errorData.error?.message || 'Bilinmeyen Hata'}`);
+                    }
                     
-                    // Add Copy Button to AI message (visible on hover)
-                    const copyBtn = document.createElement('button');
-                    copyBtn.innerHTML = <i data-lucide="copy" class="w-4 h-4"></i>;
-                    copyBtn.title = 'Yanıtı Kopyala';
-                    copyBtn.className = 'absolute -top-3 right-3 p-1 rounded-full bg-gray-800 text-gray-400 opacity-0 group-hover/bubble:opacity-100 transition-opacity text-xs hover:text-cyan-400 shadow-md border border-gray-700';
-                    copyBtn.onclick = (e) => copyTextToClipboard(message.content, e.currentTarget);
-                    contentEl.appendChild(copyBtn);
+                    return await response.json();
+
+                } catch (error) {
+                    attempt++;
+                    if (error.message === "503") {
+                        showTypingIndicator("Model yükleniyor, lütfen bekleyin...");
+                        await new Promise(resolve => setTimeout(resolve, 5000 * attempt)); // Gecikmeyi artır
+                    } else {
+                        console.error(`API Denemesi ${attempt} başarısız:`, error);
+                        if (attempt >= MAX_RETRIES) {
+                             renderSystemMessage(`**HATA:** ${error.message}`, "error");
+                             return null;
+                        }
+                    }
                 }
             }
-            
-            // Mesaj Zamanı (Opsiyonel)
-            const timeEl = document.createElement('span');
-            timeEl.className = text-xs text-gray-500 mt-1 ${isUser ? 'mr-1' : 'ml-1'};
-            timeEl.textContent = new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+            throw new Error(`[${model}] Maksimum deneme sayısına ulaşıldı.`);
+        }
 
-            contentWrapper.appendChild(contentEl);
-            contentWrapper.appendChild(timeEl);
+        // --- UI Helper Functions ---
 
-            innerFlex.appendChild(avatar);
-            innerFlex.appendChild(contentWrapper);
+        function autoScroll() {
+            MESSAGES_CONTAINER.scrollTop = MESSAGES_CONTAINER.scrollHeight;
+        }
+
+        function showTypingIndicator(text = "") {
+            isWaitingForResponse = true;
+            toggleInput(true); // Girdiyi kilitle
+            if(LOADING_TEXT) LOADING_TEXT.textContent = text || "N0thingAI düşünüyor...";
+            if(TYPING_INDICATOR) TYPING_INDICATOR.classList.add('visible');
+            // İndikatörü mesajların sonuna taşı
+            if(MESSAGES_CONTAINER) MESSAGES_CONTAINER.appendChild(TYPING_INDICATOR);
+            autoScroll();
+        }
+
+        function hideTypingIndicator() {
+            isWaitingForResponse = false;
+            toggleInput(false); // Girdiyi aç
+            if(TYPING_INDICATOR) TYPING_INDICATOR.classList.remove('visible');
+        }
+
+        function toggleInput(disabled) {
+            CHAT_INPUT.disabled = disabled;
+            SEND_BTN.disabled = disabled;
+            ATTACHMENT_BTN.disabled = disabled;
+            IMAGE_MODE_BTN.disabled = disabled; // API çağrısı sırasında mod değiştirilemesin
             
-            if (isUser) {
-                innerFlex.insertBefore(contentWrapper, avatar);
+            if (disabled) {
+                CHAT_INPUT.placeholder = "Yanıt bekleniyor...";
+            } else {
+                setChatMode(chatMode, false); // Modu ve placeholder'ı yenile
             }
+        }
 
-            messageEl.appendChild(innerFlex);
+        function renderSystemMessage(text, type = "info") {
+             const systemMessageHTML = `
+                <div class="message-row system-message-row">
+                    <div class="message-content ${type === 'error' ? 'error' : ''}">
+                        ${text}
+                    </div>
+                </div>
+             `;
+             MESSAGES_CONTAINER.insertAdjacentHTML('beforeend', systemMessageHTML);
+             autoScroll();
+        }
 
-            return messageEl;
+        function addMessageToUI(text, sender) {
+             const messageClass = sender === 'user' ? 'user-message-row' : 'ai-message-row';
+             // Metni güvenli hale getir (HTML enjeksiyonunu önle)
+             const safeText = document.createTextNode(text).textContent;
+             
+             const messageHTML = `
+                <div class="message-row ${messageClass}">
+                    <div class="message-content">
+                        ${safeText.replace(/\n/g, '<br>')}
+                    </div>
+                </div>
+             `;
+             MESSAGES_CONTAINER.insertAdjacentHTML('beforeend', messageHTML);
+        }
+        
+        function addImageToUI(imageUrl, altText) {
+            // Görseli AI mesajı olarak ekle
+             const imageHTML = `
+                <div class="message-row ai-message-row">
+                    <div class="message-content">
+                        <p class="text-sm italic mb-2" style="color: var(--text-secondary);">${altText}</p>
+                        <div class="image-container">
+                            <img src="${imageUrl}" alt="${altText}" loading="lazy" />
+                        </div>
+                    </div>
+                </div>
+             `;
+             MESSAGES_CONTAINER.insertAdjacentHTML('beforeend', imageHTML);
+        }
+        
+        // --- Core Application Logic (Firestore Eklendi) ---
+
+        function setChatMode(mode, notify = true) {
+            chatMode = mode;
+            
+            if (mode === 'image') {
+                // Görsel Modu (Bakımda)
+                renderSystemMessage("Görsel oluşturma modu şu anda bakımda. Sohbet moduna geri dönülüyor.", "error");
+                // Hemen metin moduna geri dön
+                chatMode = 'text'; 
+                return; // Mod değişimini engelle
+                
+            } else {
+                // Sohbet Modu
+                if(CURRENT_MODE_DISPLAY) CURRENT_MODE_DISPLAY.textContent = "Sohbet Modu";
+                if(CHAT_INPUT) CHAT_INPUT.placeholder = "N0thingAI'a bir mesaj gönder...";
+                if(IMAGE_MODE_BTN) IMAGE_MODE_BTN.classList.remove('text-green-500'); // Varsa yeşil vurguyu kaldır
+                // Sadece yeni bir sohbet başlatılıyorsa bu mesajı göster
+                if(notify && !currentChatId) renderSystemMessage("Sohbet Modu **AKTİF**. N0thingAI ile konuşmaya başlayın.");
+            }
+            autoScroll();
+        }
+
+        function toggleChatMode() {
+            // Görsel modu (palette) tıklandığında
+            setChatMode('image', true);
+        }
+
+        async function startNewChat() {
+            if (isWaitingForResponse) return;
+            
+            // Aktif sohbeti ve dinleyiciyi durdur
+            if (unsubscribeChat) unsubscribeChat();
+            unsubscribeChat = null;
+            currentChatId = null;
+            
+            MESSAGES_CONTAINER.innerHTML = '';
+            removeAttachment(); // Varsa ekli görseli temizle
+            
+            // Başlangıç mesajını ekle
+            renderSystemMessage("Sohbet Modu **AKTİF**. N0thingAI ile konuşmaya başlayın.");
+
+            setChatMode('text', false); // Modu 'text' olarak ayarla, bildirim (notify) yapma
+            
+            // Sidebar'daki aktif seçimi kaldır
+            document.querySelectorAll('#chat-history-list .chat-item.active').forEach(item => {
+                item.classList.remove('active');
+            });
         }
         
         /**
-         * Mesajı DOM'a ekler ve kaydırmayı gerçekleştirir.
-         * @param {object} message Mesaj nesnesi ({ role: string, content: string })
-         * @returns {HTMLElement} Eklenen mesaj elementinin kendisi.
+         * Mesajları Firebase'e kaydeder
          */
-        function appendMessage(message) {
-            const messageEl = createMessageElement(message);
-            messageFeed.appendChild(messageEl);
-            scrollToBottom();
-            return messageEl;
-        }
+        async function saveMessage(text, sender, imageUrl = null) {
+            // HATA DÜZELTMESİ: Giriş yapılmamışsa (anonim dahil) kaydetme.
+            if (!auth || !auth.currentUser || !db || auth.currentUser.isAnonymous) {
+                
+                // Anonim girişi YENİDEN ETKİNLEŞTİR (hatayı çözmek için)
+                if (sender === 'user' && (!auth || !auth.currentUser)) { 
+                    renderSystemMessage("**Uyarı:** Mesajınız kaydedilmedi. Lütfen giriş yapın.", "error");
+                }
+                // UI'ı yine de güncelle (geçici)
+                if (imageUrl) addImageToUI(imageUrl, text);
+                else addMessageToUI(text, sender);
+                return; // Kaydetmeden çık
+            }
 
+            // Buradan sonrası sadece giriş yapmış kullanıcılar için çalışır
+            const userId = auth.currentUser.uid;
+            let chatToUse = currentChatId;
+
+            try {
+                // Eğer bu yeni bir sohbetse (currentChatId null),
+                // önce bir sohbet dokümanı oluştur.
+                if (!chatToUse) {
+                    // Güvenlik kurallarına uygun yolu kullan
+                    const chatRef = await addDoc(collection(db, "users", userId, "chats"), {
+                        title: text.substring(0, 30) + "...", // İlk mesajdan başlık
+                        createdAt: serverTimestamp()
+                    });
+                    chatToUse = chatRef.id;
+                    currentChatId = chatToUse; // Global ID'yi güncelle
+                    
+                    // Yeni sohbeti dinlemeye başla (history listener bunu otomatik yakalamaz)
+                    listenToChat(userId, chatToUse); 
+                }
+
+                // Mesajı o sohbetin 'messages' alt koleksiyonuna ekle
+                await addDoc(collection(db, "users", userId, "chats", chatToUse, "messages"), {
+                    sender: sender,
+                    text: text,
+                    imageUrl: imageUrl || null,
+                    createdAt: serverTimestamp()
+                });
+
+            } catch (error) {
+                console.error("Mesaj kaydedilemedi:", error);
+                renderSystemMessage(`**HATA:** Mesajınız veritabanına kaydedilemedi. ${error.message}`, "error");
+            }
+            // Not: Artık onSnapshot dinleyicisi UI'ı güncelleyecek.
+        }
+        
         /**
-         * Geçerli sohbet kimliği için tüm mesajları oluşturur.
+         * Kullanıcı mesajını ve (varsa) görseli AI'ye gönderir.
          */
-        function renderMessages(messages) {
-            messageFeed.innerHTML = '';
-            // Hoş Geldiniz mesajını tekrar ekle (Boş sohbetler için)
-            if (!messages || messages.length === 0 || messages.every(m => m.role === 'system')) {
-                 messageFeed.innerHTML = 
-                    <div class="max-w-3xl mx-auto p-6 rounded-xl shadow-lg mt-8" style="background-color: var(--color-bubble-ai);">
-                        <p class="text-xl font-bold text-cyan-400 mb-2">Ben N0thingAI!</p>
-                        <p class="text-base text-gray-300">
-                            Sisteminiz yeniden başlatıldı ve Grok estetiğiyle optimize edildi. Yeni bir komutla (diyalog) başlayın.
-                            <br>
-                            <small class="text-gray-500">
-                                (Yüksek hızlı, kısa ve öz yanıtlar için yapılandırıldım.)
-                            </small>
-                        </p>
-                    </div>
-                ;
-            } else {
-                messages.forEach(msg => {
-                    if (msg.role !== 'system') { 
-                        messageFeed.appendChild(createMessageElement(msg));
+        async function fetchGeminiResponse(userPrompt) {
+            showTypingIndicator("N0thingAI düşünüyor...");
+
+            // Önce kullanıcı mesajını (UI'ı güncellemek için) kaydet
+            await saveMessage(userPrompt, 'user');
+            
+            let parts = [{ "text": userPrompt }];
+            
+            // Eğer ekli bir görsel varsa, API isteğine ekle
+            if (attachedImageBase64) {
+                parts.unshift({ // Görseli metinden önce ekle
+                    "inline_data": {
+                        "mime_type": "image/jpeg", // Varsayılan tip, handleFileSelect'te ayarlanabilir
+                        "data": attachedImageBase64
                     }
                 });
             }
-            scrollToBottom();
-            lucide.createIcons(); 
-        }
 
-        /**
-         * Geçmiş listesini (Sidebar'daki Konuşmalar) günceller.
-         */
-        function renderHistoryList() {
-            historyList.innerHTML = '';
-            
-            const sortedChats = Object.entries(chats)
-                .map(([id, chat]) => ({ id, ...chat }))
-                .sort((a, b) => b.timestamp - a.timestamp); // En son kullanılanı üste getir
-
-            sortedChats.forEach(chat => {
-                const isActive = chat.id === currentChatId;
-                const listItem = document.createElement('button');
-                listItem.title = chat.title || 'Boş Diyalog';
-                listItem.className = w-full text-left p-3 text-sm rounded-xl truncate transition-all duration-150 flex items-center justify-between group/chat ${
-                    isActive 
-                        ? 'text-gray-100 font-medium active-chat-item' 
-                        : 'text-gray-300 hover:bg-gray-700/30'
-                };
-                listItem.innerHTML = 
-                    <div class="flex items-center min-w-0">
-                        <i data-lucide="message-square" class="w-4 h-4 mr-2 flex-shrink-0 ${isActive ? 'text-cyan-400' : 'text-gray-500'}"></i>
-                        <span class="truncate">${chat.title || 'Boş Diyalog'}</span>
-                    </div>
-                    <i data-lucide="trash-2" class="w-4 h-4 text-gray-600 hover:text-red-400 ml-2 flex-shrink-0 opacity-0 ${isActive ? 'opacity-100' : 'group-hover/chat:opacity-100'}" onclick="event.stopPropagation(); deleteChat('${chat.id}')"></i>
-                ;
-
-                listItem.onclick = () => {
-                    if (window.innerWidth < 768) { sidebar.classList.add('-translate-x-full'); }
-                    loadChat(chat.id);
-                };
-                historyList.appendChild(listItem);
-            });
-            lucide.createIcons();
-        }
-        
-        // --- 5. CHAT MANAGEMENT ---
-
-        /**
-         * Yeni bir sohbet başlatır.
-         */
-        function newChat() {
-            // Önceki sohbetin boş olup olmadığını kontrol et
-            if (chats[currentChatId] && chats[currentChatId].messages.length === 0) {
-                 delete chats[currentChatId]; // Boşsa sil
-            }
-            
-            currentChatId = crypto.randomUUID();
-            localStorage.setItem('currentChatId', currentChatId);
-            
-            if (!chats[currentChatId]) {
-                chats[currentChatId] = {
-                    title: 'Yeni Diyalog',
-                    messages: [],
-                    timestamp: Date.now()
-                };
-            }
-            saveChats();
-            loadChat(currentChatId);
-            renderHistoryList();
-            
-            // Mobilde kenar çubuğunu kapat
-            if (window.innerWidth < 768) {
-                sidebar.classList.add('-translate-x-full');
-            }
-        }
-        
-        /**
-         * Bir sohbeti yükler ve mesajlarını görüntüler.
-         */
-        function loadChat(chatId) {
-            currentChatId = chatId;
-            localStorage.setItem('currentChatId', chatId);
-            renderMessages(chats[chatId].messages);
-            renderHistoryList();
-        }
-
-        /**
-         * Sohbet durumunu localStorage'a kaydeder.
-         */
-        function saveChats() {
-            localStorage.setItem('chats', JSON.stringify(chats));
-        }
-        
-        /**
-         * Tek bir sohbeti siler.
-         */
-        function deleteChat(chatIdToDelete) {
-            // NOTE: alert() yerine custom modal kullanıldı
-            if (confirm("Bu diyaloğu kalıcı olarak silmek istediğinizden emin misiniz?")) {
-                delete chats[chatIdToDelete];
-                saveChats();
-                
-                if (chatIdToDelete === currentChatId) {
-                    // Eğer aktif sohbet silindiyse yeni bir sohbet başlat
-                    newChat();
-                } else {
-                    renderHistoryList();
-                }
-            }
-        }
-
-        // --- 6. MESSAGE HANDLING & API LOGIC ---
-
-        function delay(ms) {
-            return new Promise(resolve => setTimeout(resolve, ms));
-        }
-
-        /**
-         * Üstel Geri Çekilme (Exponential Backoff) ile Gemini API'sini çağırır.
-         */
-        async function callGeminiAPI(history, attempt = 1) {
-            const url = API_URL;
-
-            // UI rollerini API rollerine eşle
-            const conversationHistory = history.map(msg => ({
-                role: msg.role === 'assistant' ? 'model' : msg.role,
-                parts: [{ text: msg.content }]
-            }));
-            
             const payload = {
-                contents: conversationHistory,
-                systemInstruction: {
-                    parts: [{ text: "You are N0thingAI, a highly intelligent, modern, and slightly 'Grok-style' helpful AI. Your responses must be concise, direct, and utilize superior Markdown formatting, including code blocks, lists, and bold text when necessary. You operate in High-Speed mode. Respond exclusively in Turkish." }]
-                },
+                "contents": [
+                    { "parts": parts }
+                ],
+                // "generationConfig": { ... } // Gerekirse
             };
 
-            try {
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                if (response.status === 429 && attempt < MAX_RETRIES) {
-                    const waitTime = Math.pow(2, attempt) * 1000 + (Math.random() * 1000);
-                    await delay(waitTime);
-                    return callGeminiAPI(history, attempt + 1);
-                }
-
-                if (!response.ok) {
-                    const errorBody = await response.json();
-                    throw new Error(API Hatası: ${response.status} - ${errorBody.error?.message || response.statusText});
-                }
-
-                const result = await response.json();
-                const generatedText = result.candidates?.[0]?.content?.parts?.[0]?.text;
-
-                if (!generatedText) {
-                    throw new Error("API geçerli bir yanıt metni döndürmedi. İçerik engellenmiş veya yanıt boş olabilir.");
-                }
-
-                return generatedText;
-
-            } catch (error) {
-                // Ağ hatası denemesi
-                if ((error.message.includes('Failed to fetch') || error.message.includes('Ağ Hatası')) && attempt < MAX_RETRIES) {
-                     const waitTime = Math.pow(2, attempt) * 1000 + (Math.random() * 1000); 
-                     await delay(waitTime);
-                     return callGeminiAPI(history, attempt + 1);
-                }
-                throw error; // Son hatayı tekrar fırlat
-            }
-        }
-
-        /**
-         * Mesaj gönderme işlemini yöneten ana fonksiyon.
-         */
-        async function sendMessage() {
-            if (isTyping) return;
-            const userText = messageInput.value.trim();
-            if (!userText) return;
-
-            messageInput.value = '';
-            adjustInputHeight();
-            sendBtn.disabled = true; 
-
-            // 1. Kullanıcı Mesajını Ekle
-            let currentChat = chats[currentChatId];
-            if (!currentChat) {
-                currentChat = { title: userText.substring(0, 30) + (userText.length > 30 ? '...' : ''), messages: [], timestamp: Date.now() };
-                chats[currentChatId] = currentChat;
-            }
-            
-            const userMessage = { role: 'user', content: userText };
-            appendMessage(userMessage);
-            currentChat.messages.push(userMessage);
-
-
-            // 2. AI Yazma Göstergesini Ekle
-            const typingIndicatorEl = appendMessage({ role: 'assistant', content: '<typing-indicator>' });
-
-
-            // 3. Sohbet Durumunu Güncelle
-            currentChat.title = userText.substring(0, 30) + (userText.length > 30 ? '...' : '');
-            currentChat.timestamp = Date.now();
-            saveChats();
-            renderHistoryList();
-
-            // 4. API'yi Çağır
-            isTyping = true;
-            let finalResponseText = "API'den yanıt alınamadı.";
+            let responseText = "Üzgünüm, bir hata oluştu. Lütfen tekrar deneyin.";
 
             try {
-                const geminiResponse = await callGeminiAPI(currentChat.messages);
-                finalResponseText = geminiResponse;
+                const result = await fetchWithRetry('gemini', payload, GEMINI_CHAT_API_KEY);
                 
-                // 5. Yer tutucuyu kaldır
-                typingIndicatorEl.remove();
-
-                // 6. Yeni AI mesajını geçmişe ekle ve DOM'a yerleştir
-                const aiMessage = { role: 'assistant', content: '' };
-                currentChat.messages.push(aiMessage);
-                const aiMessageEl = appendMessage(aiMessage);
-
-                // 7. Yazma Animasyonu ve Görüntüleme
-                await typeResponse(aiMessageEl, finalResponseText);
-
-                // 8. Depolamadaki AI Mesajını Güncelle
-                aiMessage.content = finalResponseText;
-                
-            } catch (error) {
-                typingIndicatorEl.remove(); // Hata oluştuğunda göstergeyi kaldır
-                
-                let errorMessage;
-                if (error.message.includes('429') || error.message.includes('quota')) {
-                    showAlert("API Kota Limiti", "API kullanım kotanız dolmuş veya limitlenmiştir. Lütfen daha sonra tekrar deneyin.");
-                    errorMessage = "Üzgünüz, API kota limitine ulaşıldı. (N0thingAI'ye bir süre sonra tekrar komut verin.)";
-                } else if (error.message.includes('400')) {
-                     showAlert("Geçersiz İstek", "API, geçersiz veya çok uzun bir istek aldığını bildirdi. Girişinizi kontrol edin.");
-                     errorMessage = "API Hatası: Geçersiz Komut. (İstek metni çok uzun veya hatalı olabilir.)";
+                if (result && result.candidates && result.candidates[0].content) {
+                    responseText = result.candidates[0].content.parts[0].text;
                 } else {
-                    console.error("API Error:", error);
-                    showAlert("Bağlantı/Sunucu Hatası", "N0thingAI servisine ulaşılamadı. Bağlantınızı kontrol edin.");
-                    errorMessage = Kritik Hata: ${error.message};
+                    responseText = "API'den geçerli bir yanıt alınamadı.";
                 }
-                
-                finalResponseText = **[Sistem Uyarısı]** ${errorMessage};
-                
-                // Hata mesajını geçmişe ekle
-                const aiMessage = { role: 'assistant', content: finalResponseText };
-                currentChat.messages.push(aiMessage);
-                const aiMessageEl = appendMessage(aiMessage);
 
-                // Hatanın anında baloncuğa gösterilmesi
-                const contentEl = aiMessageEl.querySelector('.whitespace-pre-wrap');
-                contentEl.innerHTML = markdownToHtml(finalResponseText);
-                
-                // Kopyalama düğmesini tekrar ekle
-                const copyBtn = document.createElement('button');
-                copyBtn.innerHTML = <i data-lucide="copy" class="w-4 h-4"></i>;
-                copyBtn.title = 'Yanıtı Kopyala';
-                copyBtn.className = 'absolute -top-3 right-3 p-1 rounded-full bg-gray-800 text-gray-400 opacity-0 group-hover/bubble:opacity-100 transition-opacity text-xs hover:text-cyan-400 shadow-md border border-gray-700';
-                copyBtn.onclick = (e) => copyTextToClipboard(finalResponseText, e.currentTarget);
-                contentEl.appendChild(copyBtn);
-
+            } catch (error) {
+                console.error("Gemini Hatası:", error);
+                responseText = `Hata: ${error.message}`;
             } finally {
-                isTyping = false;
-                sendBtn.disabled = false;
-                saveChats();
-                lucide.createIcons();
-            }
-        }
-
-        /**
-         * Yanıt metnini mesaj baloncuğuna anime ederek yazar.
-         */
-        async function typeResponse(messageEl, text) {
-            const contentEl = messageEl.querySelector('.whitespace-pre-wrap');
-            contentEl.innerHTML = ''; 
-
-            // \n karakterlerini de ayrı bir token olarak saymak için regex
-            const tokens = text.match(/[\s\S]/g) || []; 
-            let typedText = '';
-
-            // Copy button needs to be added back after content is typed
-            const copyBtn = messageEl.querySelector('.group/bubble button'); 
-
-            for (const token of tokens) {
-                typedText += token;
-                
-                // Render frequently to handle visual breaks (like code blocks) correctly
-                if (typedText.length % 8 === 0 || typedText.length === tokens.length) {
-                    contentEl.innerHTML = markdownToHtml(typedText);
-                    scrollToBottom();
-                    lucide.createIcons(); 
-                }
-
-                await new Promise(resolve => setTimeout(resolve, 5)); // Daha hızlı yazma hızı
-            }
-            
-            // Son kopyala düğmesinin görünürlüğünü etkinleştir
-            if(copyBtn) {
-                copyBtn.onclick = (e) => copyTextToClipboard(text, e.currentTarget);
+                hideTypingIndicator();
+                removeAttachment(); // Mesaj gönderildikten sonra eki temizle
+                await saveMessage(responseText, 'ai'); // AI yanıtını kaydet
             }
         }
         
-        // --- 7. UX/UI UTILITIES ---
+        async function generateImage(userPrompt) {
+            // Bu fonksiyon artık setChatMode tarafından engellendi.
+            renderSystemMessage("Görsel oluşturma modu şu anda bakımda.", "error");
+            hideTypingIndicator();
+            toggleInput(false);
+        }
 
-        /**
-         * Metni panoya kopyalar ve görsel geri bildirim verir.
-         */
-        function copyTextToClipboard(text, button) {
-             // Kopyala düğmesini geçici olarak kopyalandı olarak değiştir
-            const originalIcon = button.innerHTML;
-            button.innerHTML = <i data-lucide="check" class="w-4 h-4 text-green-400"></i>;
+        async function sendMessage() {
+            const text = CHAT_INPUT.value.trim();
+            if (text === "" && !attachedImageBase64) return; // Gönderecek bir şey yoksa
             
-            navigator.clipboard.writeText(text).then(() => {
-                setTimeout(() => {
-                    button.innerHTML = originalIcon;
-                    lucide.createIcons();
-                }, 1500);
-                lucide.createIcons();
-            }).catch(err => {
-                console.error('Kopyalama başarısız: ', err);
-                // Fallback (iFrame kısıtlamaları için)
-                const textarea = document.createElement('textarea');
-                textarea.value = text;
-                document.body.appendChild(textarea);
-                textarea.select();
-                try {
-                    document.execCommand('copy');
-                } catch (err) {
-                    console.error('Fallback kopyalama da başarısız oldu: ', err);
+            // HATA DÜZELTMESİ: auth.currentUser null ise (giriş yapılmadı) göndermeyi engelle
+            if (!auth || !auth.currentUser) {
+                renderSystemMessage("Mesaj göndermek veya sohbet geçmişini kaydetmek için lütfen giriş yapın.", "error");
+                return;
+            }
+
+            CHAT_INPUT.value = '';
+            autoResizeTextarea(); // Textarea'yı küçült
+
+            if (chatMode === 'image') {
+                // Görsel modu (Bakımda)
+                // Mesajı yine de kaydet
+                await saveMessage(text, 'user');
+                await generateImage(text);
+            } else {
+                // Sohbet modu (Gemini)
+                // fetchGeminiResponse zaten saveMessage'ı çağırıyor.
+                await fetchGeminiResponse(text);
+            }
+        }
+
+        function handleKey(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault(); // Yeni satır oluşturmayı engelle
+                sendMessage();
+            }
+        }
+        
+        // --- Attachment (Görsel Yükleme) Fonksiyonları ---
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            // Sadece resim dosyalarına izin ver
+            if (!file.type.startsWith('image/')) {
+                renderSystemMessage("Hata: Yalnızca resim dosyaları yüklenebilir.", "error");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                attachedImageBase64 = e.target.result.split(',')[1]; // Base64 datasını al (header olmadan)
+                if (PREVIEW_IMAGE) PREVIEW_IMAGE.src = e.target.result;
+                if (ATTACHMENT_PREVIEW) ATTACHMENT_PREVIEW.style.display = 'block';
+                if (ATTACHMENT_BTN) ATTACHMENT_BTN.classList.add('text-green-500'); // Buton rengini değiştir
+                
+                // Görsel ekliyken sohbet moduna zorla (görsel analiz için)
+                if (chatMode === 'image') {
+                    setChatMode('text', false);
                 }
-                document.body.removeChild(textarea);
+                CHAT_INPUT.placeholder = "Görsel hakkında bir soru sorun...";
+            };
+            reader.onerror = (e) => {
+                console.error("Dosya okuma hatası:", e);
+                renderSystemMessage("Hata: Dosya okunurken bir sorun oluştu.", "error");
+            };
+            reader.readAsDataURL(file);
+            
+            // Aynı dosyayı tekrar seçebilmek için inputu sıfırla
+            event.target.value = null;
+        }
+
+        function removeAttachment() {
+            attachedImageBase64 = null;
+            if (ATTACHMENT_PREVIEW) ATTACHMENT_PREVIEW.style.display = 'none';
+            if (PREVIEW_IMAGE) PREVIEW_IMAGE.src = '';
+            if (ATTACHMENT_BTN) ATTACHMENT_BTN.classList.remove('text-green-500');
+            // Placeholder'ı normale döndür
+            setChatMode(chatMode, false);
+        }
+
+        // Textarea'yı içeriğe göre otomatik büyüt/küçült
+        function autoResizeTextarea() {
+            CHAT_INPUT.style.height = 'auto'; // Yüksekliği sıfırla
+            CHAT_INPUT.style.height = (CHAT_INPUT.scrollHeight) + 'px'; // İçerik yüksekliğine ayarla
+        }
+
+        
+        // --- Auth Functions (Global Scope'a Taşıma) ---
+        
+        window.openSettingsModal = () => {
+            if (!SETTINGS_MODAL || !MODAL_SETTINGS_VIEW || !MODAL_LOGIN_VIEW) {
+                console.error("Modal elementleri bulunamadı.");
+                return;
+            }
+            // Hata mesajlarını temizle
+            if(AUTH_ERROR_MESSAGE) AUTH_ERROR_MESSAGE.classList.add('hidden');
+            if(SIGNUP_ERROR_MESSAGE) SIGNUP_ERROR_MESSAGE.classList.add('hidden');
+            
+            SETTINGS_MODAL.classList.remove('hidden');
+            
+            // Auth durumunu kontrol et
+            if (auth && auth.currentUser && !auth.currentUser.isAnonymous) {
+                // Giriş yapmış kullanıcı -> Ayarları göster
+                MODAL_LOGIN_VIEW.classList.add('hidden');
+                MODAL_SIGNUP_VIEW.classList.add('hidden');
+                MODAL_SETTINGS_VIEW.classList.remove('hidden');
+            } else {
+                // Giriş yapmamış/Anonim -> Giriş ekranını göster
+                MODAL_LOGIN_VIEW.classList.remove('hidden');
+                MODAL_SIGNUP_VIEW.classList.add('hidden');
+                MODAL_SETTINGS_VIEW.classList.add('hidden');
+            }
+            
+            updateThemeSpecificElements();
+        };
+
+        window.closeSettingsModal = () => {
+            if (SETTINGS_MODAL) SETTINGS_MODAL.classList.add('hidden');
+        };
+
+        // (SOSYAL GİRİŞ FONKSİYONLARI KALDIRILDI)
+
+        // Hata mesajlarını merkezileştirme ve Modal'da gösterme
+        function renderAuthError(error, view = 'login') {
+            let errorMessage = "Bilinmeyen bir hata oluştu.";
+            if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+                errorMessage = "Girdiğiniz e-posta veya şifre yanlış.";
+            } else if (error.code === 'auth/email-already-in-use') {
+                errorMessage = "Bu e-posta adresi zaten kayıtlı.";
+            } else if (error.code === 'auth/weak-password') {
+                errorMessage = "Şifre en az 6 karakter olmalıdır.";
+            } else if (error.code === 'auth/invalid-email') {
+                errorMessage = "Geçersiz e-posta adresi formatı.";
+            } else if (error.code === 'auth/configuration-not-found') {
+                 errorMessage = "Giriş yöntemi (Email) Firebase'de etkin değil.";
+            } else {
+                errorMessage = error.message;
+            }
+
+            if (view === 'login' && AUTH_ERROR_MESSAGE) {
+                AUTH_ERROR_MESSAGE.textContent = errorMessage;
+                AUTH_ERROR_MESSAGE.classList.remove('hidden');
+            } else if (view === 'signup' && SIGNUP_ERROR_MESSAGE) {
+                SIGNUP_ERROR_MESSAGE.textContent = errorMessage;
+                SIGNUP_ERROR_MESSAGE.classList.remove('hidden');
+            } else {
+                // Modal'da değilse sistem mesajı olarak göster
+                renderSystemMessage(`**Giriş Hatası:** ${errorMessage}`, "error");
+            }
+        }
+
+
+        async function signInWithEmail() {
+            if (!auth) return;
+            try {
+                const email = EMAIL_INPUT.value;
+                const password = PASSWORD_INPUT.value;
+                if (!email || !password) {
+                    renderAuthError({ code: 'auth/missing-fields' }, 'login');
+                    return;
+                }
+                await signInWithEmailAndPassword(auth, email, password);
+                window.closeSettingsModal();
+            } catch (error) {
+                console.error("Email Giriş Hatası:", error);
+                renderAuthError(error, "login");
+            }
+        }
+
+        async function signUpWithEmail() {
+            if (!auth) return;
+            try {
+                const email = SIGNUP_EMAIL_INPUT.value;
+                const password = SIGNUP_PASSWORD_INPUT.value;
+                if (!email || !password) {
+                    renderAuthError({ code: 'auth/missing-fields' }, 'signup');
+                    return;
+                }
+                if (password.length < 6) {
+                    renderAuthError({ code: 'auth/weak-password' }, 'signup');
+                    return;
+                }
+                await createUserWithEmailAndPassword(auth, email, password);
+                window.closeSettingsModal();
+                renderSystemMessage("**Başarılı:** Kayıt oldunuz ve giriş yaptınız.");
+            } catch (error) {
+                console.error("Email Kayıt Hatası:", error);
+                renderAuthError(error, "signup");
+            }
+        }
+
+
+        async function signOutUser() {
+            if (!auth) return;
+            try {
+                await signOut(auth);
+                window.closeSettingsModal();
+                renderSystemMessage("Başarıyla çıkış yaptınız.");
+            } catch (error) {
+                 console.error("Çıkış Hatası:", error);
+            }
+        }
+        
+        
+        // --- YENİ: Sohbet ve Geçmiş Dinleyicileri ---
+        
+        /**
+         * Belirli bir sohbetin mesajlarını dinler
+         */
+        function listenToChat(userId, chatId) {
+            if (!db) return;
+            if (unsubscribeChat) unsubscribeChat(); // Önceki sohbeti dinlemeyi bırak
+
+            currentChatId = chatId;
+            MESSAGES_CONTAINER.innerHTML = ''; // Yeni sohbet için ekranı temizle
+
+            const messagesQuery = query(
+                collection(db, "users", userId, "chats", chatId, "messages"),
+                orderBy("createdAt", "asc")
+            );
+
+            unsubscribeChat = onSnapshot(messagesQuery, (snapshot) => {
+                MESSAGES_CONTAINER.innerHTML = ''; // Her güncellemede temizle ve yeniden çiz
+                if (snapshot.empty) {
+                    renderSystemMessage("Sohbet Modu **AKTİF**...");
+                }
+                snapshot.forEach(doc => {
+                    const msg = doc.data();
+                    if (msg.imageUrl) {
+                        addImageToUI(msg.imageUrl, msg.text);
+                    } else {
+                        addMessageToUI(msg.text, msg.sender);
+                    }
+                });
+                autoScroll();
+            }, (error) => {
+                console.error("Sohbet dinlenirken hata:", error);
+                renderSystemMessage(`**HATA:** Sohbet yüklenemedi. ${error.message}`, "error");
+            });
+        }
+        
+        /**
+         * Kullanıcının sohbet listesini dinler (Sidebar için)
+         */
+        function listenToChatHistory(userId) {
+            if (!db) return;
+            if (unsubscribeHistory) unsubscribeHistory(); // Önceki listeyi dinlemeyi bırak
+
+            const historyQuery = query(
+                collection(db, "users", userId, "chats"),
+                orderBy("createdAt", "desc")
+            );
+
+            unsubscribeHistory = onSnapshot(historyQuery, (snapshot) => {
+                // Mevcut DOM'daki item'ları temizle (mod göstergesi hariç)
+                document.querySelectorAll('#chat-history-list .chat-item').forEach(item => item.remove());
+                
+                snapshot.forEach(doc => {
+                    const chat = doc.data();
+                    const chatId = doc.id;
+                    const li = document.createElement('li');
+                    li.className = 'chat-item'; // CSS değişkenlerini kullanan stil
+                    li.textContent = chat.title || "Yeni Sohbet";
+                    li.dataset.chatId = chatId; // ID'yi sakla
+                    
+                    if (chatId === currentChatId) {
+                        li.classList.add('active'); // Aktif stili uygula
+                    }
+
+                    li.onclick = () => {
+                        // Aktif stili ayarla
+                        document.querySelectorAll('#chat-history-list .chat-item').forEach(item => {
+                            item.classList.remove('active');
+                        });
+                        li.classList.add('active');
+                        
+                        listenToChat(userId, chatId);
+                    };
+                    CHAT_HISTORY_LIST.appendChild(li);
+                });
+            }, (error) => {
+                console.error("Geçmiş listesi dinlenirken hata:", error);
             });
         }
 
-        // --- 8. EVENT LISTENERS & INITIALIZATION ---
 
-        window.onload = () => {
-            loadTheme();
-            lucide.createIcons(); 
-
-            // Mevcut sohbeti yükle veya yeni bir sohbet başlat
-            if (!chats[currentChatId] || chats[currentChatId].messages.length === 0) {
-                newChat(); 
-            } else {
-                loadChat(currentChatId);
+        /**
+         * Auth durumunu dinler ve UI'ı günceller
+         */
+        function setupAuthListener() {
+            if (!auth) {
+                console.log("Firebase Auth bulunamadı, giriş yapılamaz.");
+                if(LOGIN_VIEW) LOGIN_VIEW.classList.remove('hidden');
+                if(USER_PROFILE_VIEW) USER_PROFILE_VIEW.classList.add('hidden');
+                startNewChat(); // Sohbeti başlat
+                renderSystemMessage("Kimlik doğrulama hizmeti yüklenemedi. Lütfen giriş yapmayı denemeyin.", "error");
+                return;
             }
-        };
+            
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    // Kullanıcı var (Giriş yapmış veya Anonim)
+                    console.log("Auth durumu değişti. Kullanıcı:", user.uid, "Anonim mi:", user.isAnonymous);
+                    currentUserId = user.uid;
+                    
+                    if (user.isAnonymous) {
+                        // Anonim Kullanıcı
+                        if(LOGIN_VIEW) LOGIN_VIEW.classList.remove('hidden');
+                        if(USER_PROFILE_VIEW) USER_PROFILE_VIEW.classList.add('hidden');
+                        if (USER_NAME) USER_NAME.textContent = "Anonim Kullanıcı";
+                        if (PROFILE_PIC) PROFILE_PIC.textContent = "A";
+                        
+                        // Anonim kullanıcılar için sohbet geçmişini (varsa) durdur
+                        if (unsubscribeChat) unsubscribeChat();
+                        if (unsubscribeHistory) unsubscribeHistory();
+                        document.querySelectorAll('#chat-history-list .chat-item').forEach(item => item.remove());
 
-        // UI Interactions
-        themeToggleBtn.addEventListener('click', toggleTheme);
-        newChatBtn.addEventListener('click', newChat);
+                        await startNewChat();
+                        renderSystemMessage("Sohbet geçmişini görmek ve kaydetmek için lütfen giriş yapın.", "info");
+
+                    } else {
+                        // Giriş Yapmış Kullanıcı (Email)
+                        if(LOGIN_VIEW) LOGIN_VIEW.classList.add('hidden');
+                        if(USER_PROFILE_VIEW) USER_PROFILE_VIEW.classList.remove('hidden');
+                        
+                        if (USER_NAME) USER_NAME.textContent = user.email || "Kullanıcı";
+                        
+                        // Profil Resmi (Email için baş harf)
+                        if (PROFILE_PIC) PROFILE_PIC.textContent = (user.email || "K")[0].toUpperCase();
+                        
+                        // Kullanıcı giriş yaptı, sohbet geçmişini dinlemeye başla
+                        listenToChatHistory(user.uid);
+                        await startNewChat(); // Yeni sohbeti başlat
+                    }
+                    
+                } else {
+                    // Kullanıcı yok (Çıkış yapmış)
+                    console.log("Kullanıcı oturumu kapalı (null).");
+                    currentUserId = null;
+                    
+                    if(LOGIN_VIEW) LOGIN_VIEW.classList.remove('hidden');
+                    if(USER_PROFILE_VIEW) USER_PROFILE_VIEW.classList.add('hidden');
+                    
+                    // Sohbet geçmişini (varsa) durdur
+                    if (unsubscribeChat) unsubscribeChat();
+                    if (unsubscribeHistory) unsubscribeHistory();
+                    document.querySelectorAll('#chat-history-list .chat-item').forEach(item => item.remove());
+                    
+                    // HATA DÜZELTMESİ: Çıkış yapıldığında, tekrar anonim giriş yap.
+                    try {
+                        await signInAnonymously(auth);
+                        console.log("Çıkış yapıldı, anonim olarak tekrar giriş yapıldı.");
+                    } catch (error) {
+                         console.error("Anonim giriş hatası (çıkış sonrası):", error);
+                         renderSystemMessage(`**Kritik Hata:** Anonim oturum başlatılamadı. ${error.message}. Firebase konsolunda 'Anonymous' (Anonim) giriş yöntemini etkinleştirin.`, "error");
+                    }
+                }
+                
+                updateThemeSpecificElements();
+            });
+        }
         
-        // Settings Modal
-        openSettingsBtn.addEventListener('click', () => {
-             settingsModal.classList.remove('hidden');
-             settingsModal.classList.add('flex');
-        });
+        // --- Tema Fonksiyonları ---
 
-        closeSettingsBtn.addEventListener('click', () => {
-             settingsModal.classList.remove('flex');
-             settingsModal.classList.add('hidden');
-        });
-        
-        closeSettingsModalFooter.addEventListener('click', () => {
-             settingsModal.classList.remove('flex');
-             settingsModal.classList.add('hidden');
-        });
+        function applyTheme(themeName) {
+            document.body.className = themeName; // Sınıfı değiştir
+            localStorage.setItem('n0thingai_theme', themeName);
+            updateThemeSpecificElements();
+        }
 
-        // Alert Modal
-        closeAlertBtn.addEventListener('click', () => {
-            alertModal.classList.remove('flex');
-            alertModal.classList.add('hidden');
-        });
+        // Tema değişiminden etkilenen (CSS değişkeni kullanmayan) elemanları güncelle
+        function updateThemeSpecificElements() {
+            // Logo rengini güncelle (eğer tema değişirse)
+            const theme = localStorage.getItem('n0thingai_theme') || 'dark-mode'; // Varsayılan Koyu (Gri/Beyaz)
+            const logoSvg = document.querySelector('.logo-svg');
+            if (logoSvg) {
+                if (theme === 'light-mode') {
+                    logoSvg.style.color = '#FFFFFF';
+                } else {
+                    logoSvg.style.color = '#FFFFFF'; // Koyu temada da beyaz (kontrast için)
+                }
+            }
+        }
 
-        // Mobile Sidebar Toggles
-        openSidebarBtn.addEventListener('click', () => sidebar.classList.remove('-translate-x-full'));
-        closeSidebarBtn.addEventListener('click', () => sidebar.classList.add('-translate-x-full'));
-        
-        // Input and Send
-        sendBtn.addEventListener('click', sendMessage);
-        
-        messageInput.addEventListener('input', () => {
-            adjustInputHeight();
-            sendBtn.disabled = messageInput.value.trim() === '' || isTyping;
-        });
+        // --- Mobil Sidebar Fonksiyonları ---
+        function toggleSidebar(open) {
+            if (open) {
+                SIDEBAR.classList.add('open');
+                MOBILE_OVERLAY.style.display = 'block';
+            } else {
+                SIDEBAR.classList.remove('open');
+                MOBILE_OVERLAY.style.display = 'none';
+            }
+        }
 
-        // Keyboard Shortcut (Enter Key)
-        messageInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault(); 
-                if (!sendBtn.disabled) {
-                    sendMessage();
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            
+            // Olay Dinleyicilerini Ata
+            
+            // Sohbet
+            NEW_CHAT_BTN.addEventListener('click', startNewChat);
+            SEND_BTN.addEventListener('click', sendMessage);
+            CHAT_INPUT.addEventListener('keydown', handleKey);
+            CHAT_INPUT.addEventListener('input', autoResizeTextarea); // Otomatik büyütme
+            
+            // Mod Değişimi
+            IMAGE_MODE_BTN.addEventListener('click', toggleChatMode); // Bakımda mesajı verecek
+
+            // Görsel Yükleme
+            ATTACHMENT_BTN.addEventListener('click', () => FILE_INPUT.click());
+            FILE_INPUT.addEventListener('change', handleFileSelect);
+            REMOVE_ATTACHMENT_BTN.addEventListener('click', removeAttachment);
+
+            // Auth Modal
+            // (Global scope'a taşındığı için butonlara direkt onclick verildi)
+            
+            // Auth Modal Butonları
+            // SOSYAL GİRİŞ BUTONLARI KALDIRILDI
+            EMAIL_SIGNIN_BTN.addEventListener('click', signInWithEmail);
+            SIGNUP_BTN.addEventListener('click', signUpWithEmail);
+            SIGNOUT_BTN.addEventListener('click', signOutUser);
+
+            // Modal geçiş butonları
+            SHOW_SIGNUP_BTN.addEventListener('click', () => {
+                MODAL_LOGIN_VIEW.classList.add('hidden');
+                MODAL_SIGNUP_VIEW.classList.remove('hidden');
+                if(AUTH_ERROR_MESSAGE) AUTH_ERROR_MESSAGE.classList.add('hidden'); // Hataları temizle
+            });
+            SHOW_SIGNIN_BTN.addEventListener('click', () => {
+                MODAL_LOGIN_VIEW.classList.remove('hidden');
+                MODAL_SIGNUP_VIEW.classList.add('hidden');
+                if(SIGNUP_ERROR_MESSAGE) SIGNUP_ERROR_MESSAGE.classList.add('hidden'); // Hataları temizle
+            });
+            
+            // Tema Değişimi
+            THEME_SELECTOR.addEventListener('change', (e) => {
+                applyTheme(e.target.value);
+            });
+            
+            // Mobil Sidebar
+            OPEN_SIDEBAR_BTN.addEventListener('click', () => toggleSidebar(true));
+            CLOSE_SIDEBAR_BTN.addEventListener('click', () => toggleSidebar(false));
+            MOBILE_OVERLAY.addEventListener('click', () => toggleSidebar(false));
+
+            // Kayıtlı Temayı Yükle
+            const savedTheme = localStorage.getItem('n0thingai_theme') || 'dark-mode'; // VARSAYILAN: KOYU TEMA (Gri/Beyaz)
+            applyTheme(savedTheme);
+            THEME_SELECTOR.value = savedTheme;
+
+            // --- Uygulamayı Başlat ---
+            
+            // 1. Auth dinleyicisini kur
+            setupAuthListener(); 
+            
+            // 2. Başlangıçta anonim giriş yapmayı dene
+            // (Bu, 'auth/configuration-not-found' hatası verirse,
+            // Firebase konsolunda 'Anonymous' girişi etkinleştirilmemiştir)
+            if (auth && !auth.currentUser) {
+                try {
+                    await signInAnonymously(auth);
+                    console.log("Başarılı anonim giriş.");
+                } catch (error) {
+                    console.error("Başlangıç anonim giriş hatası:", error);
+                    renderSystemMessage(`**Kritik Hata:** Oturum başlatılamadı. ${error.message}. Lütfen Firebase konsolunuzda 'Anonymous' (Anonim) giriş yöntemini etkinleştirdiğinizden emin olun.`, "error");
                 }
             }
         });
-        
-        // Disable send button initially if input is empty
-        messageInput.addEventListener('keyup', () => {
-            sendBtn.disabled = messageInput.value.trim() === '' || isTyping;
-        });
-
     </script>
 </body>
 </html>
