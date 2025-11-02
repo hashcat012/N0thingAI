@@ -184,8 +184,41 @@
         .sidebar-footer {
             border-top: 1px solid var(--input-border);
             padding-top: 16px;
+            margin-top: auto; /* Footer'ı en alta it */
         }
         #auth-container { transition: all 0.3s; }
+        
+        /* YENİ: PLUS BUTONU (SOHBET ALANINA TAŞINDI) */
+        #plus-btn {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            z-index: 20; /* Hamburger menünün altında, içeriğin üstünde */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 6px 10px; /* Küçültüldü */
+            background-color: var(--highlight-color);
+            color: #fff; 
+            font-weight: 700;
+            transition: background-color 0.2s;
+            border-radius: 8px;
+            font-size: 0.85rem; /* Küçültüldü */
+        }
+        .dark-mode #plus-btn {
+            color: #1A1A1A;
+        }
+        .light-mode #plus-btn {
+            color: #FFFFFF;
+        }
+        #plus-btn:hover {
+            background-color: color-mix(in srgb, var(--highlight-color) 85%, black);
+        }
+        #plus-btn i {
+             text-shadow: 0 0 8px color-mix(in srgb, var(--highlight-color) 50%, white);
+             font-size: 0.8rem;
+        }
         
         /* Profil Görünümü (Oturum Açık) */
         #user-profile-view {
@@ -506,6 +539,12 @@
             .message-row {
                 max-width: 95%;
             }
+            /* Mobilde Plus butonunu hamburger menüsünün sağına al */
+            #plus-btn {
+                top: 15px;
+                right: 15px;
+                left: auto;
+            }
         }
     </style>
 </head>
@@ -527,6 +566,9 @@
             <button class="new-chat-btn" id="new-chat-btn">
                 <i class="fas fa-plus"></i> Yeni Sohbet
             </button>
+            
+            <!-- YENİ: PREMIUM BUTONU (Buradan kaldırıldı) -->
+
 
             <!-- Sohbet Geçmişi (Geri Eklendi) -->
             <nav class="chat-history">
@@ -537,7 +579,7 @@
                     <!-- Geçmiş buraya dinamik olarak yüklenecek -->
                 </ul>
             </nav>
-
+            
             <!-- Profil ve Ayarlar (Dinamik Auth Alanı) -->
             <footer class="sidebar-footer">
                 <div id="auth-container" class="w-full">
@@ -568,6 +610,12 @@
             <button class="icon-btn hamburger-btn md:hidden" id="open-sidebar-btn">
                 <i class="fas fa-bars"></i>
             </button>
+            
+            <!-- YENİ: PREMIUM BUTONU (Buraya taşındı) -->
+            <button id="plus-btn" class="absolute top-4 right-4 z-10 py-1 px-3 login-btn rounded-xl font-semibold text-xs flex items-center gap-2">
+                <i class="fas fa-star"></i> Plus
+            </button>
+
             <!-- Mobil Overlay (Sidebar açıkken) -->
             <div class="mobile-overlay md:hidden" id="mobile-overlay"></div>
 
@@ -683,6 +731,50 @@
         </div>
     </div>
     
+    <!-- YENİ: PREMIUM MODALI (ÖDEME İPTAL) -->
+    <div id="premium-modal" class="modal hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center modal-overlay">
+        <div class="p-6 rounded-xl shadow-2xl w-full max-w-md modal-content relative">
+            <h2 class="text-xl font-bold mb-4 text-center">
+                <i class="fas fa-star-half-alt mr-2" style="color: var(--highlight-color);"></i>
+                N0thingAI Plus
+            </h2>
+            <p class="text-center text-sm opacity-80 mb-6" style="color: var(--text-secondary);">
+                Limitleri kaldırın ve en gelişmiş özelliklere erişin.
+            </p>
+            
+            <!-- ÖZELLİK LİSTESİ -->
+            <div class="p-6 rounded-lg mb-6" style="background-color: var(--input-bg);">
+                <ul class="space-y-3">
+                    <li class="flex items-center">
+                        <i class="fas fa-check-circle text-green-500 mr-3"></i>
+                        <span class="font-medium">Sınırsız</span> Mesaj
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-check-circle text-green-500 mr-3"></i>
+                        <span class="font-medium">Sınırsız</span> Görsel Oluşturma
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-check-circle text-green-500 mr-3"></i>
+                        <span class="font-medium">Sınırsız</span> Dosya Yükleme
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-check-circle text-green-500 mr-3"></i>
+                        Gelecek tüm yeni özelliklere erken erişim
+                    </li>
+                </ul>
+            </div>
+
+            <!-- BUTON VE ÖDEME TALİMATLARI KALDIRILDI -->
+            <p class="text-xs text-center mt-2" style="color: var(--text-secondary);">
+                Otomatik ödeme sistemleri yakında eklenecektir.
+            </p>
+            
+            <button onclick="window.closePremiumModal()" class="absolute top-4 right-4 text-xl opacity-70 hover:opacity-100" style="color: var(--text-secondary);">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+    
     <script type="module">
         // Firebase ve Google API Entegrasyonu
         // --- FIRESTORE IMPORTLARI YENİDEN EKLENDİ ---
@@ -694,10 +786,11 @@
             signInWithEmailAndPassword // Email ile giriş için
             // SOSYAL GİRİŞ IMPORTLARI KALDIRILDI
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        // --- FIRESTORE IMPORTLARI (Geçmiş için) ---
+        // --- FIRESTORE IMPORTLARI (Geçmiş ve KOTA için) ---
         import { 
             getFirestore, doc, setDoc, addDoc, collection, onSnapshot, 
-            query, orderBy, serverTimestamp, getDocs 
+            query, orderBy, serverTimestamp, getDoc,
+            Timestamp // YENİ: Zaman damgası için
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- HİBRİT API Keys ve Modeller ---
@@ -766,6 +859,11 @@
         const MODAL_SETTINGS_VIEW = document.getElementById('modal-settings-view');
         const THEME_SELECTOR = document.getElementById('theme-selector');
         
+        // YENİ: Premium Modal Elements
+        const PREMIUM_MODAL = document.getElementById('premium-modal');
+        const PLUS_BTN = document.getElementById('plus-btn');
+        // const CHECKOUT_BTN = document.getElementById('checkout-btn'); // MANUEL İPTAL
+
         // Hata Mesajı Alanları
         const AUTH_ERROR_MESSAGE = document.getElementById('auth-error-message');
         const SIGNUP_ERROR_MESSAGE = document.getElementById('signup-error-message');
@@ -788,6 +886,24 @@
         const CLOSE_SIDEBAR_BTN = document.getElementById('close-sidebar-btn');
         const MOBILE_OVERLAY = document.getElementById('mobile-overlay');
 
+        // --- YENİ: KOTA LİMİTLERİ ---
+        const QUOTAS = {
+            anonymous: {
+                messages: 5, // Toplam (Günlük değil)
+                images: 0,
+                files: 0
+            },
+            normal: {
+                messages: 50, // Günlük
+                images: 1,  // Günlük
+                files: 5    // Günlük
+            },
+            plus: {
+                messages: Infinity,
+                images: Infinity,
+                files: Infinity
+            }
+        };
 
         // --- Global State (Geçmiş Eklendi) ---
         let chatMode = 'text'; // 'text' (Chat) or 'image' (Generation)
@@ -799,9 +915,11 @@
         let unsubscribeChat = null; // Aktif sohbet dinleyicisini
         let unsubscribeHistory = null; // Sohbet listesi dinleyicisini
         
-        // --- YENİ: MESAJ LİMİTİ ---
-        let anonymousMessageCount = 0;
-        const ANONYMOUS_MESSAGE_LIMIT = 5;
+        // YENİ: KOTA DURUMU
+        let currentUserRole = 'anonymous'; // 'anonymous', 'normal', 'plus'
+        let anonymousMessageCount = 0; // Sadece anonim için toplam sayaç
+        let dailyUsage = {}; // Firestore'dan gelen günlük kullanım
+        
 
         /**
          * API Çağrısını Üstlenir (HİBRİT: Gemini ve Hugging Face)
@@ -970,9 +1088,13 @@
                 if(IMAGE_MODE_BTN) IMAGE_MODE_BTN.classList.remove('text-green-500'); // Varsa yeşil vurguyu kaldır
                 if(notify) {
                      // Anonimse ve yeni sohbetse limiti göster
-                    if (auth && auth.currentUser && auth.currentUser.isAnonymous && !currentChatId) {
-                         renderSystemMessage(`Sohbet Modu **AKTİF**. (Kalan mesaj hakkınız: ${ANONYMOUS_MESSAGE_LIMIT - anonymousMessageCount})`);
-                    } else if (!currentChatId) { // Giriş yapmış ve yeni sohbetse
+                    if (currentUserRole === 'anonymous' && !currentChatId) {
+                         renderSystemMessage(`Sohbet Modu **AKTİF**. (Toplam ${QUOTAS.anonymous.messages} mesaj hakkınız var. Daha fazlası için lütfen giriş yapın.)`);
+                    } else if (currentUserRole === 'normal' && !currentChatId) {
+                         // Günlük kalan hakkı göstermek için 'dailyUsage'in yüklenmiş olması lazım
+                         const remainingMessages = QUOTAS.normal.messages - (dailyUsage.messages || 0);
+                         renderSystemMessage(`Sohbet Modu **AKTİF**. (Bugün ${remainingMessages} mesaj hakkınız kaldı)`);
+                    } else if (!currentChatId) { // Plus ve yeni sohbetse
                          renderSystemMessage("Sohbet Modu **AKTİF**.");
                     }
                     // (Eski sohbete tıklandıysa (currentChatId var), sistem mesajı gösterme)
@@ -1001,12 +1123,17 @@
             MESSAGES_CONTAINER.innerHTML = '';
             removeAttachment(); // Varsa ekli görseli temizle
             
-            // YENİ: Mesaj limiti sayacını sıfırla
-            if (auth && auth.currentUser && auth.currentUser.isAnonymous) {
-                anonymousMessageCount = 0;
-                renderSystemMessage(`Sohbet Modu **AKTİF**. (Kalan mesaj hakkınız: ${ANONYMOUS_MESSAGE_LIMIT})`);
+            // YENİ: Başlangıç mesajını role göre ayarla
+            if (currentUserRole === 'anonymous') {
+                anonymousMessageCount = 0; // Toplam sayacı sıfırla
+                // DÜZELTME: Giriş yapma uyarısı eklendi
+                renderSystemMessage(`Sohbet Modu **AKTİF**. (Toplam ${QUOTAS.anonymous.messages} mesaj hakkınız var. Daha fazlası için lütfen giriş yapın.)`);
+            } else if (currentUserRole === 'normal') {
+                // Kalan hakkı göster
+                const remainingMessages = QUOTAS.normal.messages - (dailyUsage.messages || 0);
+                renderSystemMessage(`Sohbet Modu **AKTİF**. (Bugün ${remainingMessages} mesaj hakkınız kaldı)`);
             } else {
-                 renderSystemMessage("Sohbet Modu **AKTİF**. N0thingAI ile konuşmaya başlayın.");
+                renderSystemMessage("Sohbet Modu **AKTİF**. N0thingAI ile konuşmaya başlayın.");
             }
 
             setChatMode('text', false); // Modu 'text' olarak ayarla, bildirim (notify) yapma
@@ -1022,18 +1149,14 @@
          */
         async function saveMessage(text, sender, imageUrl = null) {
             // YENİ: Anonim kullanıcılar UI'a kaydeder (veritabanına değil)
-            if (!auth || !auth.currentUser || !db || auth.currentUser.isAnonymous) {
-                
-                if (sender === 'user' && (!auth || !auth.currentUser)) { 
-                    // renderSystemMessage("**Uyarı:** Mesajınız kaydedilmedi. Lütfen giriş yapın.", "error"); // Limitte zaten gösteriliyor
-                }
+            if (currentUserRole === 'anonymous') {
                 // UI'ı yine de güncelle (geçici)
                 if (imageUrl) addImageToUI(imageUrl, text);
                 else addMessageToUI(text, sender);
                 return; // Kaydetmeden çık
             }
 
-            // Buradan sonrası sadece giriş yapmış kullanıcılar için çalışır
+            // Buradan sonrası sadece giriş yapmış kullanıcılar için çalışır (normal, plus)
             const userId = auth.currentUser.uid;
             let chatToUse = currentChatId;
 
@@ -1192,39 +1315,146 @@
                 }
             }
         }
+        
+        // --- YENİ: GÜNLÜK KOTA KONTROLÜ (Usage Check) ---
+        
+        /**
+         * Bugünün tarihini YYYY-MM-DD formatında döndürür
+         */
+        function getTodayDateString() {
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}`;
+        }
+
+        /**
+         * HATA DÜZELTMESİ: Veri yolunu (users/{uid}/profile/usage) olarak güncelledim.
+         */
+        async function checkUsageLimit(userId, actionType) { // actionType: 'messages', 'images', 'files'
+            if (!db || !userId) return false; // Veritabanı yoksa engelle
+
+            // 1. Kullanıcının rolünü (isPremium) ve günlük kullanımını al
+            // (Güvenlik kurallarına uygun olarak /profile/usage yolunu kullan)
+            const profileRef = doc(db, "users", userId, "profile", "usage");
+            const profileDoc = await getDoc(profileRef);
+            
+            let isPremium = false;
+            let currentUsage = {
+                date: getTodayDateString(),
+                messages: 0,
+                images: 0,
+                files: 0
+            };
+            
+            if (profileDoc.exists()) {
+                const data = profileDoc.data();
+                if (data.isPremium === true) {
+                    isPremium = true;
+                    currentUserRole = 'plus'; // Global rolü güncelle
+                } else {
+                    currentUserRole = 'normal'; // Global rolü güncelle
+                }
+
+                // Günlük kullanımı kontrol et
+                const todayStr = getTodayDateString();
+                if (data.date === todayStr) {
+                    currentUsage = data; // Dünkü veriyi değil, bugünkü veriyi al
+                }
+                // (Eğer tarih farklıysa, 'currentUsage' (sıfırlanmış hali) kullanılır)
+                
+            } else {
+                 currentUserRole = 'normal'; // Varsayılan
+            }
+
+
+            // 2. Plus kullanıcıysa, limiti kontrol etme
+            if (isPremium) {
+                return true; // Sınırsız
+            }
+            
+            // 3. Normal kullanıcıysa, günlük kotayı kontrol et
+            const limit = QUOTAS.normal[actionType];
+            const currentCount = currentUsage[actionType] || 0;
+            
+            if (currentCount >= limit) {
+                // Limit aşıldı
+                let actionName = "";
+                if(actionType === 'messages') actionName = "mesaj";
+                else if(actionType === 'images') actionName = "görsel oluşturma";
+                else if(actionType === 'files') actionName = "dosya yükleme";
+                
+                renderSystemMessage(`Günlük ${actionName} limitinize ulaştınız (${limit}/${limit}). Sınırsız kullanım için lütfen N0thingAI Plus'a geçin.`, "error");
+                window.openPremiumModal(); // Premium modalını aç
+                return false;
+            }
+            
+            // 4. Limite ulaşılmadı, sayacı artır ve veritabanını güncelle
+            currentUsage[actionType] = currentCount + 1;
+            currentUsage.date = getTodayDateString(); // Tarihi güncelle
+            
+            // 'isPremium' durumunu (varsa) koruyarak yaz
+            // (Mevcut veriyi okuyup üzerine yazmak daha güvenli olur)
+            const existingData = profileDoc.exists() ? profileDoc.data() : {};
+            await setDoc(profileRef, { ...existingData, ...currentUsage }); 
+            dailyUsage = currentUsage; // Global kullanımı güncelle
+            
+            return true; // İzin verildi
+        }
+
 
         async function sendMessage() {
             const text = CHAT_INPUT.value.trim();
             if (text === "" && !attachedImageBase64) return; // Gönderecek bir şey yoksa
             
-            // HATA DÜZELTMESİ: auth.currentUser null ise (giriş yapılmadı) göndermeyi engelle
             if (!auth || !auth.currentUser) {
-                renderSystemMessage("Mesaj göndermek veya sohbet geçmişini kaydetmek için lütfen giriş yapın.", "error");
+                renderSystemMessage("Mesaj göndermek için lütfen giriş yapın.", "error");
+                window.openSettingsModal();
                 return;
             }
+            
+            const userId = auth.currentUser.uid;
+            let action = 'messages'; // Varsayılan sohbet
+            
+            if (chatMode === 'image') action = 'images';
+            if (attachedImageBase64) action = 'files'; // Dosya yükleme (mesajdan daha öncelikli)
 
-            // --- YENİ: MESAJ LİMİTİ KONTROLÜ ---
+            // --- YENİ: LİMİT KONTROLÜ (sendMessage) ---
             if (auth.currentUser.isAnonymous) {
-                if (anonymousMessageCount >= ANONYMOUS_MESSAGE_LIMIT) {
-                    renderSystemMessage("Mesaj limitinize ulaştınız. Lütfen sohbet geçmişinizi kaydetmek ve devam etmek için giriş yapın.", "error");
+                // ANONİM KULLANICI
+                
+                // Görsel veya dosya yüklemeye çalışırsa engelle
+                if (action === 'images' || action === 'files') {
+                     renderSystemMessage("Görsel oluşturmak veya dosya yüklemek için lütfen giriş yapın.", "error");
+                     window.openSettingsModal();
+                     return;
+                }
+                
+                // Mesaj limitini kontrol et
+                if (anonymousMessageCount >= QUOTAS.anonymous.messages) {
+                    renderSystemMessage("Mesaj limitinize ulaştınız. Devam etmek için lütfen giriş yapın.", "error");
                     window.openSettingsModal(); // Giriş modalını aç
                     return; // Mesajı göndermeyi engelle
                 }
-                // Sadece kullanıcı mesajı gönderdiğinde sayacı artır
-                anonymousMessageCount++; 
-                
-                // Kalan hakkı bildir (opsiyonel ama iyi olur)
-                const remaining = ANONYMOUS_MESSAGE_LIMIT - anonymousMessageCount;
+                anonymousMessageCount++;
+                const remaining = QUOTAS.anonymous.messages - anonymousMessageCount;
                 if (remaining > 0) {
-                    renderSystemMessage(`(Kalan ${remaining} mesaj hakkınız.)`, "info");
+                     renderSystemMessage(`(Kalan ${remaining} mesaj hakkınız.)`, "info");
                 } else {
-                    renderSystemMessage("Son mesaj hakkınızı kullandınız. Lütfen giriş yapın.", "info");
+                     renderSystemMessage("Son mesaj hakkınızı kullandınız. Lütfen giriş yapın.", "info");
+                }
+            } else {
+                // GİRİŞ YAPMIŞ KULLANICI (Normal veya Plus)
+                const allowed = await checkUsageLimit(userId, action);
+                if (!allowed) {
+                    return; // Limit aşıldı, gönderme
                 }
             }
             // --- LİMİT KONTROLÜ SONU ---
 
 
-            // DÜZELTME: Mesajı göndermeden ÖNCE kaydet
+            // Mesajı göndermeden ÖNCE kaydet (UI ve/veya DB için)
             await saveMessage(text || "(Görsel eklendi)", 'user');
 
             CHAT_INPUT.value = '';
@@ -1234,7 +1464,7 @@
                 // Görsel modu (Hugging Face)
                 await generateImage(text);
             } else {
-                // Sohbet modu (Gemini)
+                // Sohbet modu (Gemini) veya Görsel Analiz (Gemini)
                 await fetchGeminiResponse(text);
             }
         }
@@ -1248,9 +1478,25 @@
         
         // --- Attachment (Görsel Yükleme) Fonksiyonları ---
 
-        function handleFileSelect(event) {
+        async function handleFileSelect(event) {
             const file = event.target.files[0];
             if (!file) return;
+            
+            if (!auth || !auth.currentUser) {
+                renderSystemMessage("Dosya yüklemek için lütfen giriş yapın.", "error");
+                window.openSettingsModal();
+                return;
+            }
+            
+            // --- YENİ: LİMİT KONTROLÜ (handleFileSelect) ---
+            if (auth.currentUser.isAnonymous) {
+                renderSystemMessage("Dosya yüklemek için lütfen giriş yapın.", "error");
+                window.openSettingsModal();
+                return;
+            } 
+            // (Limit kontrolü artık sendMessage içinde yapılıyor, eklendiğinde değil)
+            // --- LİMİT KONTROLÜ SONU ---
+
             
             // Sadece resim dosyalarına izin ver
             if (!file.type.startsWith('image/')) {
@@ -1329,6 +1575,22 @@
         window.closeSettingsModal = () => {
             if (SETTINGS_MODAL) SETTINGS_MODAL.classList.add('hidden');
         };
+        
+        // YENİ: Premium Modal Fonksiyonları
+        window.openPremiumModal = () => {
+            // Giriş yapmamışsa, önce giriş modalını aç
+            if (auth && auth.currentUser && auth.currentUser.isAnonymous) {
+                window.openSettingsModal();
+                return;
+            }
+            if (PREMIUM_MODAL) PREMIUM_MODAL.classList.remove('hidden');
+        };
+        window.closePremiumModal = () => {
+            if (PREMIUM_MODAL) PREMIUM_MODAL.classList.add('hidden');
+        };
+        
+        // ÖDEME BUTONU KALDIRILDI
+        // window.handleCheckout = () => { ... };
 
         // (SOSYAL GİRİŞ FONKSİYONLARI KALDIRILDI)
 
@@ -1392,7 +1654,26 @@
                     renderAuthError({ code: 'auth/weak-password' }, 'signup');
                     return;
                 }
-                await createUserWithEmailAndPassword(auth, email, password);
+                
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                
+                // YENİ: Kayıt olunca, kullanıcıya 'users' ve 'userUsage' koleksiyonlarında varsayılan kayıtları oluştur
+                if (userCredential.user && db) {
+                    const userId = userCredential.user.uid;
+                    
+                    // HATA DÜZELTMESİ: Güvenlik kurallarına uygun yolu kullan
+                    // (Artık users/{uid}/profile/usage kullanıyoruz)
+                    const profileRef = doc(db, "users", userId, "profile", "usage");
+                    await setDoc(profileRef, {
+                        email: userCredential.user.email,
+                        isPremium: false, // Varsayılan olarak premium değil
+                        date: getTodayDateString(),
+                        messages: 0,
+                        images: 0,
+                        files: 0
+                    });
+                }
+                
                 window.closeSettingsModal();
                 renderSystemMessage("**Başarılı:** Kayıt oldunuz ve giriş yaptınız.");
             } catch (error) {
@@ -1502,7 +1783,7 @@
         /**
          * Auth durumunu dinler ve UI'ı günceller
          */
-        function setupAuthListener() {
+        async function setupAuthListener() {
             if (!auth) {
                 console.log("Firebase Auth bulunamadı, giriş yapılamaz.");
                 if(LOGIN_VIEW) LOGIN_VIEW.classList.remove('hidden');
@@ -1513,6 +1794,15 @@
             }
             
             onAuthStateChanged(auth, async (user) => {
+                
+                // YENİ: KOTA SIFIRLAMA ve ROL AYARLAMA
+                // Önceki dinleyicileri (varsa) temizle
+                if (unsubscribeChat) unsubscribeChat();
+                if (unsubscribeHistory) unsubscribeHistory();
+                unsubscribeChat = null;
+                unsubscribeHistory = null;
+                dailyUsage = {}; // Günlük kullanımı sıfırla
+                
                 if (user) {
                     // Kullanıcı var (Giriş yapmış veya Anonim)
                     console.log("Auth durumu değişti. Kullanıcı:", user.uid, "Anonim mi:", user.isAnonymous);
@@ -1520,47 +1810,58 @@
                     
                     if (user.isAnonymous) {
                         // Anonim Kullanıcı
+                        currentUserRole = 'anonymous'; // Rolü ayarla
+                        anonymousMessageCount = 0; // Toplam sayacı sıfırla
+                        
                         if(LOGIN_VIEW) LOGIN_VIEW.classList.remove('hidden');
                         if(USER_PROFILE_VIEW) USER_PROFILE_VIEW.classList.add('hidden');
                         if (USER_NAME) USER_NAME.textContent = "Anonim Kullanıcı";
                         if (PROFILE_PIC) PROFILE_PIC.textContent = "A";
                         
-                        // Anonim kullanıcılar için sohbet geçmişini (varsa) durdur
-                        if (unsubscribeChat) unsubscribeChat();
-                        if (unsubscribeHistory) unsubscribeHistory();
                         document.querySelectorAll('#chat-history-list .chat-item').forEach(item => item.remove());
-
-                        await startNewChat(); // Bu, mesaj limitiyle birlikte sistem mesajını gösterecek
-                        // renderSystemMessage("Sohbet geçmişini görmek ve kaydetmek için lütfen giriş yapın.", "info"); // startNewChat'te halledildi
+                        
+                        // DÜZELTME: "Plus" butonunu anonimken GÖSTER
+                        if (PLUS_BTN) PLUS_BTN.classList.remove('hidden');
 
                     } else {
                         // Giriş Yapmış Kullanıcı (Email)
-                        anonymousMessageCount = 0; // Sayacı sıfırla
+                        currentUserRole = 'normal'; // Varsayılan rol (aşağıda değişebilir)
+                        
                         if(LOGIN_VIEW) LOGIN_VIEW.classList.add('hidden');
                         if(USER_PROFILE_VIEW) USER_PROFILE_VIEW.classList.remove('hidden');
                         
                         if (USER_NAME) USER_NAME.textContent = user.email || "Kullanıcı";
-                        
-                        // Profil Resmi (Email için baş harf)
                         if (PROFILE_PIC) PROFILE_PIC.textContent = (user.email || "K")[0].toUpperCase();
+                        
+                        // HATA DÜZELTMESİ: Veri yolunu (users/{uid}/profile/usage) olarak güncelledim.
+                        const profileRef = doc(db, "users", user.uid, "profile", "usage");
+                        const profileDoc = await getDoc(profileRef);
+                        
+                        if (profileDoc.exists() && profileDoc.data().isPremium === true) {
+                            currentUserRole = 'plus';
+                            if (PLUS_BTN) PLUS_BTN.classList.add('hidden'); // Zaten Plus ise butonu gizle
+                        } else {
+                             if (PLUS_BTN) PLUS_BTN.classList.remove('hidden'); // Plus değilse butonu göster
+                        }
                         
                         // Kullanıcı giriş yaptı, sohbet geçmişini dinlemeye başla
                         listenToChatHistory(user.uid);
-                        await startNewChat(); // Yeni sohbeti başlat
                     }
+                    
+                    // Auth durumu değiştiğinde (yeni giriş/çıkış/anonim), sohbeti temizle
+                    await startNewChat();
                     
                 } else {
                     // Kullanıcı yok (Çıkış yapmış)
                     console.log("Kullanıcı oturumu kapalı (null).");
                     currentUserId = null;
+                    currentUserRole = 'anonymous'; // Rolü anonime çek
                     anonymousMessageCount = 0; // Sayacı sıfırla
                     
                     if(LOGIN_VIEW) LOGIN_VIEW.classList.remove('hidden');
                     if(USER_PROFILE_VIEW) USER_PROFILE_VIEW.classList.add('hidden');
                     
                     // Sohbet geçmişini (varsa) durdur
-                    if (unsubscribeChat) unsubscribeChat();
-                    if (unsubscribeHistory) unsubscribeHistory();
                     document.querySelectorAll('#chat-history-list .chat-item').forEach(item => item.remove());
                     
                     // HATA DÜZELTMESİ: Çıkış yapıldığında, tekrar anonim giriş yap.
@@ -1638,6 +1939,11 @@
             EMAIL_SIGNIN_BTN.addEventListener('click', signInWithEmail);
             SIGNUP_BTN.addEventListener('click', signUpWithEmail);
             SIGNOUT_BTN.addEventListener('click', signOutUser);
+            
+            // YENİ: Premium Modal Butonları
+            PLUS_BTN.addEventListener('click', window.openPremiumModal);
+            // CHECKOUT_BTN.addEventListener('click', window.handleCheckout); // MANUEL İPTAL
+
 
             // Modal geçiş butonları
             SHOW_SIGNUP_BTN.addEventListener('click', () => {
@@ -1687,3 +1993,4 @@
     </script>
 </body>
 </html>
+
