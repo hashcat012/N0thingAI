@@ -798,6 +798,10 @@
         let currentChatId = null; // Aktif sohbetin Firestore ID'si
         let unsubscribeChat = null; // Aktif sohbet dinleyicisini
         let unsubscribeHistory = null; // Sohbet listesi dinleyicisini
+        
+        // --- YENİ: MESAJ LİMİTİ ---
+        let anonymousMessageCount = 0;
+        const ANONYMOUS_MESSAGE_LIMIT = 5;
 
         /**
          * API Çağrısını Üstlenir (HİBRİT: Gemini ve Hugging Face)
@@ -964,7 +968,15 @@
                 if(CURRENT_MODE_DISPLAY) CURRENT_MODE_DISPLAY.textContent = "Sohbet Modu"; // "Gemini" kaldırıldı
                 if(CHAT_INPUT) CHAT_INPUT.placeholder = "N0thingAI'a bir mesaj gönder...";
                 if(IMAGE_MODE_BTN) IMAGE_MODE_BTN.classList.remove('text-green-500'); // Varsa yeşil vurguyu kaldır
-                if(notify) renderSystemMessage("Sohbet Modu **AKTİF**.");
+                if(notify) {
+                     // Anonimse ve yeni sohbetse limiti göster
+                    if (auth && auth.currentUser && auth.currentUser.isAnonymous && !currentChatId) {
+                         renderSystemMessage(`Sohbet Modu **AKTİF**. (Kalan mesaj hakkınız: ${ANONYMOUS_MESSAGE_LIMIT - anonymousMessageCount})`);
+                    } else if (!currentChatId) { // Giriş yapmış ve yeni sohbetse
+                         renderSystemMessage("Sohbet Modu **AKTİF**.");
+                    }
+                    // (Eski sohbete tıklandıysa (currentChatId var), sistem mesajı gösterme)
+                }
             }
             autoScroll();
         }
@@ -989,8 +1001,13 @@
             MESSAGES_CONTAINER.innerHTML = '';
             removeAttachment(); // Varsa ekli görseli temizle
             
-            // Başlangıç mesajını ekle
-            renderSystemMessage("Sohbet Modu **AKTİF**. N0thingAI ile konuşmaya başlayın.");
+            // YENİ: Mesaj limiti sayacını sıfırla
+            if (auth && auth.currentUser && auth.currentUser.isAnonymous) {
+                anonymousMessageCount = 0;
+                renderSystemMessage(`Sohbet Modu **AKTİF**. (Kalan mesaj hakkınız: ${ANONYMOUS_MESSAGE_LIMIT})`);
+            } else {
+                 renderSystemMessage("Sohbet Modu **AKTİF**. N0thingAI ile konuşmaya başlayın.");
+            }
 
             setChatMode('text', false); // Modu 'text' olarak ayarla, bildirim (notify) yapma
             
@@ -1004,12 +1021,11 @@
          * Mesajları Firebase'e kaydeder
          */
         async function saveMessage(text, sender, imageUrl = null) {
-            // HATA DÜZELTMESİ: Giriş yapılmamışsa (anonim dahil) kaydetme.
+            // YENİ: Anonim kullanıcılar UI'a kaydeder (veritabanına değil)
             if (!auth || !auth.currentUser || !db || auth.currentUser.isAnonymous) {
                 
-                // Anonim girişi YENİDEN ETKİNLEŞTİR (hatayı çözmek için)
                 if (sender === 'user' && (!auth || !auth.currentUser)) { 
-                    renderSystemMessage("**Uyarı:** Mesajınız kaydedilmedi. Lütfen giriş yapın.", "error");
+                    // renderSystemMessage("**Uyarı:** Mesajınız kaydedilmedi. Lütfen giriş yapın.", "error"); // Limitte zaten gösteriliyor
                 }
                 // UI'ı yine de güncelle (geçici)
                 if (imageUrl) addImageToUI(imageUrl, text);
@@ -1186,6 +1202,27 @@
                 renderSystemMessage("Mesaj göndermek veya sohbet geçmişini kaydetmek için lütfen giriş yapın.", "error");
                 return;
             }
+
+            // --- YENİ: MESAJ LİMİTİ KONTROLÜ ---
+            if (auth.currentUser.isAnonymous) {
+                if (anonymousMessageCount >= ANONYMOUS_MESSAGE_LIMIT) {
+                    renderSystemMessage("Mesaj limitinize ulaştınız. Lütfen sohbet geçmişinizi kaydetmek ve devam etmek için giriş yapın.", "error");
+                    window.openSettingsModal(); // Giriş modalını aç
+                    return; // Mesajı göndermeyi engelle
+                }
+                // Sadece kullanıcı mesajı gönderdiğinde sayacı artır
+                anonymousMessageCount++; 
+                
+                // Kalan hakkı bildir (opsiyonel ama iyi olur)
+                const remaining = ANONYMOUS_MESSAGE_LIMIT - anonymousMessageCount;
+                if (remaining > 0) {
+                    renderSystemMessage(`(Kalan ${remaining} mesaj hakkınız.)`, "info");
+                } else {
+                    renderSystemMessage("Son mesaj hakkınızı kullandınız. Lütfen giriş yapın.", "info");
+                }
+            }
+            // --- LİMİT KONTROLÜ SONU ---
+
 
             // DÜZELTME: Mesajı göndermeden ÖNCE kaydet
             await saveMessage(text || "(Görsel eklendi)", 'user');
@@ -1493,11 +1530,12 @@
                         if (unsubscribeHistory) unsubscribeHistory();
                         document.querySelectorAll('#chat-history-list .chat-item').forEach(item => item.remove());
 
-                        await startNewChat();
-                        renderSystemMessage("Sohbet geçmişini görmek ve kaydetmek için lütfen giriş yapın.", "info");
+                        await startNewChat(); // Bu, mesaj limitiyle birlikte sistem mesajını gösterecek
+                        // renderSystemMessage("Sohbet geçmişini görmek ve kaydetmek için lütfen giriş yapın.", "info"); // startNewChat'te halledildi
 
                     } else {
                         // Giriş Yapmış Kullanıcı (Email)
+                        anonymousMessageCount = 0; // Sayacı sıfırla
                         if(LOGIN_VIEW) LOGIN_VIEW.classList.add('hidden');
                         if(USER_PROFILE_VIEW) USER_PROFILE_VIEW.classList.remove('hidden');
                         
@@ -1515,6 +1553,7 @@
                     // Kullanıcı yok (Çıkış yapmış)
                     console.log("Kullanıcı oturumu kapalı (null).");
                     currentUserId = null;
+                    anonymousMessageCount = 0; // Sayacı sıfırla
                     
                     if(LOGIN_VIEW) LOGIN_VIEW.classList.remove('hidden');
                     if(USER_PROFILE_VIEW) USER_PROFILE_VIEW.classList.add('hidden');
