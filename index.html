@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta name="google-site-verification" content="AQSoYrgNNGutZzf4jpzwVieUI29wYj_CJKfNka2Uk4I" />
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- DÜZELTME: Başlık değişti -->
@@ -215,12 +214,14 @@
         }
         #auth-container { transition: all 0.3s; }
         
-        /* YENİ: PLUS BUTONU (SOHBET ALANINA TAŞINDI) */
+        /* YENİ: PLUS BUTONU (Sidebar'dan taşındı) */
         #plus-btn {
             position: absolute;
+            /* DÜZELTME: Ortalandı */
             top: 16px;
-            right: 16px;
-            z-index: 20; /* Hamburger menünün altında, içeriğin üstünde */
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 20;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -232,6 +233,7 @@
             transition: background-color 0.2s;
             border-radius: 8px;
             font-size: 0.85rem; /* Küçültüldü */
+            cursor: pointer;
         }
         .dark-mode #plus-btn {
             color: #1A1A1A;
@@ -284,11 +286,48 @@
 
         /* Sohbet Alanı */
         .chat-area { flex-grow: 1; display: flex; flex-direction: column; position: relative; background-color: var(--bg-primary); }
+        
+        /* YENİ: Token Göstergesi */
+        #token-display {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            z-index: 20;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            background-color: var(--input-bg);
+            border: 1px solid var(--input-border);
+            color: var(--text-secondary);
+            font-weight: 700;
+            border-radius: 8px;
+            font-size: 0.85rem;
+        }
+        /* YENİ: Token Sembolü "N" */
+        #token-symbol {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.7rem;
+            background-color: var(--highlight-color);
+            color: white;
+        }
+        .dark-mode #token-symbol {
+            color: #1A1A1A;
+        }
+        
         .messages-container {
             padding: 20px;
             overflow-y: auto;
             flex-grow: 1;
             scroll-behavior: smooth;
+            /* YENİ: Token/Plus butonları için üst boşluk */
+            padding-top: 70px; 
             padding-bottom: 120px; /* Input alanı için boşluk */
         }
 
@@ -601,7 +640,7 @@
                 max-width: 95%;
             }
             /* Mobilde Plus butonunu hamburger menüsünün sağına al */
-            #plus-btn {
+            #token-display { /* Token göstergesi de ayarlandı */
                 top: 15px;
                 right: 15px;
                 left: auto;
@@ -610,6 +649,13 @@
             #scroll-to-bottom-btn {
                 bottom: 110px; /* Mobil input alanı daha yüksekte */
                 right: 15px;
+            }
+            /* YENİ: Mobilde Plus Butonu Yeri */
+            #plus-btn {
+                top: 15px;
+                left: 50%;
+                transform: translateX(-50%);
+                right: auto;
             }
         }
     </style>
@@ -640,6 +686,8 @@
                 <i class="fas fa-plus"></i> Yeni Sohbet
             </button>
             
+            <!-- (PLUS Butonu buradan kaldırıldı) -->
+
             <!-- Sohbet Geçmişi (Geri Eklendi) -->
             <nav class="chat-history">
                 <ul id="chat-history-list" class="space-y-1">
@@ -681,10 +729,18 @@
                 <i class="fas fa-bars"></i>
             </button>
             
-            <!-- YENİ: PREMIUM BUTONU (Buraya taşındı) -->
-            <button id="plus-btn" class="absolute top-4 right-4 z-10 py-1 px-3 login-btn rounded-xl font-semibold text-xs flex items-center gap-2">
+            <!-- YENİ: PLUS BUTONU (ÜST ORTA) -->
+            <button id="plus-btn" class="absolute top-4 left-1/2 transform -translate-x-1/2 z-10 py-1 px-3 login-btn rounded-xl font-semibold text-xs flex items-center gap-2">
                 <i class="fas fa-star"></i> Plus
             </button>
+
+            <!-- YENİ: TOKEN GÖSTERGESİ (SAĞ ÜST) -->
+            <div id="token-display" class="absolute top-4 right-4 z-10 py-1 px-3 rounded-xl font-semibold text-xs flex items-center gap-2">
+                <!-- YENİ: Token Sembolü "N" -->
+                <span id="token-symbol" class="w-4 h-4 rounded-full flex items-center justify-center font-bold text-xs">N</span>
+                <span id="token-count">...</span>
+            </div>
+
 
             <!-- Mobil Overlay (Sidebar açıkken) -->
             <div class="mobile-overlay md:hidden" id="mobile-overlay"></div>
@@ -822,43 +878,60 @@
         </div>
     </div>
     
-    <!-- YENİ: PREMIUM MODALI (ÖDEME İPTAL) -->
+    <!-- YENİ: PREMIUM MODALI (TOKEN SİSTEMİ) -->
     <div id="premium-modal" class="modal hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center modal-overlay">
-        <div class="p-6 rounded-xl shadow-2xl w-full max-w-md modal-content relative">
+        <div class="p-6 rounded-xl shadow-2xl w-full max-w-2xl modal-content relative">
             <h2 class="text-xl font-bold mb-4 text-center">
                 <i class="fas fa-star-half-alt mr-2" style="color: var(--highlight-color);"></i>
-                N0thingAI Plus
+                N0thingAI Planları
             </h2>
             <p class="text-center text-sm opacity-80 mb-6" style="color: var(--text-secondary);">
-                Limitleri kaldırın ve en gelişmiş özelliklere erişin.
+                Limitlerinizi yükseltin ve N0thingAI'ı tam potansiyelinde kullanın.
             </p>
             
-            <!-- ÖZELLİK LİSTESİ -->
-            <div class="p-6 rounded-lg mb-6" style="background-color: var(--input-bg);">
-                <ul class="space-y-3">
-                    <li class="flex items-center">
-                        <i class="fas fa-check-circle text-green-500 mr-3"></i>
-                        <span class="font-medium">Sınırsız</span> Mesaj
-                    </li>
-                    <li class="flex items-center">
-                        <i class="fas fa-check-circle text-green-500 mr-3"></i>
-                        <span class="font-medium">Sınırsız</span> Görsel Oluşturma
-                    </li>
-                    <li class="flex items-center">
-                        <i class="fas fa-check-circle text-green-500 mr-3"></i>
-                        <span class="font-medium">Sınırsız</span> Dosya Yükleme
-                    </li>
-                    <li class="flex items-center">
-                        <i class="fas fa-check-circle text-green-500 mr-3"></i>
-                        Gelecek tüm yeni özelliklere erken erişim
-                    </li>
-                </ul>
-            </div>
+            <!-- YENİ: KARŞILAŞTIRMA TABLOSU -->
+            <table class="w-full text-sm text-left mb-6">
+                <thead style="background-color: var(--input-bg);">
+                    <tr>
+                        <th class="p-3 rounded-tl-lg">Özellik</th>
+                        <th class="p-3 text-center">Normal</th>
+                        <th class="p-3 text-center">Plus (25 TL/Ay)</th>
+                        <th class="p-3 text-center">Premium (35 TL/Ay)</th>
+                        <!-- Admin kaldırıldı -->
+                    </tr>
+                </thead>
+                <tbody style="color: var(--text-secondary);">
+                    <tr class="border-b" style="border-color: var(--input-border);">
+                        <td class="p-3 font-semibold">Günlük Token</td>
+                        <td class="p-3 text-center">150 Token</td>
+                        <td class="p-3 text-center">500 Token</td>
+                        <td class="p-3 text-center rounded-tr-lg">1000 Token</td>
+                    </tr>
+                    <tr class="border-b" style="border-color: var(--input-border);">
+                        <td class="p-3 font-semibold">Mesaj (10 Token)</td>
+                        <td class="p-3 text-center">(~15 Mesaj)</td>
+                        <td class="p-3 text-center">(~50 Mesaj)</td>
+                        <td class="p-3 text-center">(~100 Mesaj)</td>
+                    </tr>
+                    <tr class="border-b" style="border-color: var(--input-border);">
+                        <td class="p-3 font-semibold">Görsel (20 Token)</td>
+                        <td class="p-3 text-center">(~7 Görsel)</td>
+                        <td class="p-3 text-center">(~25 Görsel)</td>
+                        <td class="p-3 text-center">(~50 Görsel)</td>
+                    </tr>
+                    <tr class="border-b" style="border-color: var(--input-border);">
+                        <td class="p-3 font-semibold">Dosya (15 Token)</td>
+                        <td class="p-3 text-center">(~10 Dosya)</td>
+                        <td class="p-3 text-center">(~33 Dosya)</td>
+                        <td class="p-3 text-center">(~66 Dosya)</td>
+                    </tr>
+                </tbody>
+            </table>
 
-            <!-- BUTON VE ÖDEME TALİMATLARI KALDIRILDI -->
-            <!-- DÜZELTME: (Papara) yazısı kaldırıldı -->
-            <p class="text-xs text-center mt-2" style="color: var(--text-secondary);">
-                Limitsiz kullanım yakında sona erecektir. Plus sistemi gelene kadar deneyimleyebilirsiniz.
+            <!-- İLETİŞİM BİLGİSİ -->
+            <p class="text-xs text-center mt-4" style="color: var(--text-secondary);">
+                Üyeliğinizi yükseltmek için (manuel onay): 
+                <a href="mailto:n0thingaiofficial@gmail.com" class="font-bold underline" style="color: var(--highlight-color);">n0thingaiofficial@gmail.com</a>
             </p>
             
             <button onclick="window.closePremiumModal()" class="absolute top-4 right-4 text-xl opacity-70 hover:opacity-100" style="color: var(--text-secondary);">
@@ -902,7 +975,7 @@
         import { 
             getFirestore, doc, setDoc, addDoc, collection, onSnapshot, 
             query, orderBy, serverTimestamp, getDoc,
-            Timestamp, updateDoc // YENİ: updateDoc (Başlık için)
+            Timestamp, updateDoc, getDocs // <<< HATA DÜZELTMESİ: getDocs EKLENDİ
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- HİBRİT API Keys ve Modeller ---
@@ -978,7 +1051,6 @@
         // YENİ: Premium Modal Elements
         const PREMIUM_MODAL = document.getElementById('premium-modal');
         const PLUS_BTN = document.getElementById('plus-btn');
-        // const CHECKOUT_BTN = document.getElementById('checkout-btn'); // MANUEL İPTAL
 
         // Hata Mesajı Alanları
         const AUTH_ERROR_MESSAGE = document.getElementById('auth-error-message');
@@ -1015,24 +1087,26 @@
         const CANCEL_IMAGE_EDIT_BTN = document.getElementById('cancel-image-edit');
         const CONFIRM_IMAGE_EDIT_BTN = document.getElementById('confirm-image-edit');
         let tempImageBlob = null; // Düzenlenecek görselin geçici referansı
+        
+        // YENİ: Token Göstergesi
+        const TOKEN_DISPLAY = document.getElementById('token-display');
+        const TOKEN_COUNT = document.getElementById('token-count');
 
-        // --- YENİ: KOTA LİMİTLERİ (GÜNCELLENDİ) ---
+
+        // --- YENİ: KOTA LİMİTLERİ (TOKEN) ---
         const QUOTAS = {
-            anonymous: {
-                messages: 5, // Toplam
-                images: 0,
-                files: 0
-            },
-            normal: { // GİRİŞ YAPAN (ÜCRETSİZ) KULLANICILAR İÇİN LİMİTLER KALDIRILDI
-                messages: Infinity,
-                images: Infinity,
-                files: Infinity
-            },
-            plus: { // PLUS (GELECEKTE)
-                messages: Infinity,
-                images: Infinity,
-                files: Infinity
-            }
+            anonymous: { tokens: 50 }, // DÜZELTME: Anonim için 50 token (günlük)
+            normal: { tokens: 150 },
+            plus: { tokens: 500 },
+            premium: { tokens: 1000 },
+            admin: { tokens: Infinity }
+        };
+        
+        // Token Maliyetleri
+        const COSTS = {
+            message: 10,
+            image: 20,
+            file: 15
         };
 
         // --- Global State (Geçmiş Eklendi) ---
@@ -1045,10 +1119,10 @@
         let unsubscribeChat = null; // Aktif sohbet dinleyicisini
         let unsubscribeHistory = null; // Sohbet listesi dinleyicisini
         
-        // YENİ: KOTA DURUMU (SADECE ANONİM İÇİN)
-        let currentUserRole = 'anonymous'; // 'anonymous', 'normal', 'plus'
-        let anonymousMessageCount = 0; // Sadece anonim için toplam sayaç
-        // let dailyUsage = {}; // GÜNLÜK KOTA KALDIRILDI
+        // YENİ: KOTA DURUMU (TOKEN)
+        let currentUserRole = 'anonymous'; // 'anonymous', 'normal', 'plus', 'premium', 'admin'
+        // anonymousMessageCount kaldırıldı, artık anonimler de token kullanıyor
+        let dailyUsage = { tokens: 0 }; // Firestore'dan gelen günlük kullanım
 
 
         /**
@@ -1222,14 +1296,14 @@
                 if(CHAT_INPUT) CHAT_INPUT.placeholder = "N0thingAI'a bir mesaj gönder...";
                 if(IMAGE_MODE_BTN) IMAGE_MODE_BTN.classList.remove('text-green-500'); // Varsa yeşil vurguyu kaldır
                 if(notify) {
-                     // Anonimse ve yeni sohbetse limiti göster
+                    // Kalan token'ı göster
+                    const maxTokens = QUOTAS[currentUserRole]?.tokens || 0;
+                    const remainingTokens = maxTokens === Infinity ? "Sınırsız" : (maxTokens - (dailyUsage.tokens || 0));
+                     
                     if (currentUserRole === 'anonymous' && !currentChatId) {
-                         renderSystemMessage(`Sohbet Modu **AKTİF**. (Toplam ${QUOTAS.anonymous.messages} mesaj hakkınız var. Daha fazlası için lütfen giriş yapın.)`);
-                    } else if (currentUserRole === 'normal' && !currentChatId) {
-                         // GÜNLÜK LİMİT KALDIRILDI
-                         renderSystemMessage(`Sohbet Modu **AKTİF**.`);
-                    } else if (!currentChatId) { // Plus ve yeni sohbetse
-                         renderSystemMessage("Sohbet Modu **AKTİF**.");
+                         renderSystemMessage(`Sohbet Modu **AKTİF**. (Kalan Token: ${remainingTokens})`);
+                    } else if (currentUserRole !== 'anonymous' && !currentChatId) {
+                         renderSystemMessage(`Sohbet Modu **AKTİF**. (Kalan Token: ${remainingTokens})`);
                     }
                 }
             }
@@ -1257,14 +1331,9 @@
             removeAttachment(); // Varsa ekli görseli temizle
             
             // YENİ: Başlangıç mesajını role göre ayarla
-            if (currentUserRole === 'anonymous') {
-                anonymousMessageCount = 0; // Toplam sayacı sıfırla
-                // DÜZELTME: Giriş yapma uyarısı eklendi
-                renderSystemMessage(`Sohbet Modu **AKTİF**. (Toplam ${QUOTAS.anonymous.messages} mesaj hakkınız var. Daha fazlası için lütfen giriş yapın.)`);
-            } else {
-                 // GÜNLÜK LİMİT KALDIRILDI
-                renderSystemMessage("Sohbet Modu **AKTİF**. N0thingAI ile konuşmaya başlayın.");
-            }
+            const maxTokens = QUOTAS[currentUserRole]?.tokens || 0;
+            const remainingTokens = maxTokens === Infinity ? "Sınırsız" : (maxTokens - (dailyUsage.tokens || 0));
+            renderSystemMessage(`Sohbet Modu **AKTİF**. (Kalan Token: ${remainingTokens})`);
 
             setChatMode('text', false); // Modu 'text' olarak ayarla, bildirim (notify) yapma
             
@@ -1276,7 +1345,8 @@
         
         // --- YENİ: OTOMATİK SOHBET BAŞLIĞI OLUŞTURMA ---
         async function generateChatTitle(firstMessage) {
-            if (!db || !auth.currentUser || !currentChatId) return;
+            // Sadece giriş yapmış kullanıcılar için başlık oluştur
+            if (!db || !auth.currentUser || auth.currentUser.isAnonymous || !currentChatId) return;
             
             const userId = auth.currentUser.uid;
             const chatId = currentChatId;
@@ -1423,11 +1493,8 @@
                 try {
                     const messagesRef = collection(db, "users", currentUserId, "chats", currentChatId, "messages");
                     // Son 10 mesajı al (orderBy ve limit kullanarak)
-                    // Not: Bu, Firestore'da index gerektirebilir. Şimdilik basit tutuyoruz.
-                    // En iyi yöntem: onSnapshot'tan gelen mesajları 'currentMessages' gibi bir array'de tutmak.
-                    // Şimdilik, HAFİZA için son 10 mesajı *tekrar* çekiyoruz (daha basit):
                     const q = query(messagesRef, orderBy("createdAt", "desc"));
-                    const historySnapshot = await getDocs(q);
+                    const historySnapshot = await getDocs(q); // <<< HATA DÜZELTMESİ: getDocs EKLENDİ
                     
                     let tempHistory = [];
                     historySnapshot.forEach(doc => {
@@ -1533,8 +1600,103 @@
             }
         }
         
-        // --- GÜNLÜK KOTA KONTROLÜ (KALDIRILDI) ---
-        // async function checkUsageLimit(userId, actionType) { ... }
+        // --- YENİ: GÜNLÜK KOTA KONTROLÜ (TOKEN) ---
+        
+        /**
+         * Bugünün tarihini YYYY-MM-DD formatında döndürür
+         */
+        function getTodayDateString() {
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}`;
+        }
+        
+        /**
+         * Token göstergesini günceller
+         */
+        function updateTokenDisplay(used, total) {
+            if (!TOKEN_COUNT || !TOKEN_DISPLAY) return;
+            
+            // YENİ: Anonim için de göster
+            TOKEN_DISPLAY.style.display = 'flex';
+            
+            if (total === Infinity) {
+                TOKEN_COUNT.textContent = `Sınırsız Token`;
+            } else {
+                TOKEN_COUNT.textContent = `${total - used} / ${total} Token`;
+            }
+        }
+
+        /**
+         * Kullanıcının eylem (mesaj, görsel, dosya) limitini kontrol eder.
+         */
+        async function checkUsageLimit(userId, actionCost) {
+            if (!db || !userId) return false; // Veritabanı yoksa engelle
+
+            // 1. Kullanıcının rolünü (isPremium) ve günlük kullanımını al
+            const profileRef = doc(db, "users", userId, "chats", "--profile--");
+            const profileDoc = await getDoc(profileRef);
+            
+            let role = 'anonymous'; // Varsayılan (eğer bir şekilde anonim buraya gelirse)
+            let currentUsage = {
+                date: getTodayDateString(),
+                tokens: 0
+            };
+            
+            if (profileDoc.exists()) {
+                const data = profileDoc.data();
+                role = data.role || 'normal'; // Rolü al
+                currentUserRole = role; // Global rolü güncelle
+
+                // Günlük kullanımı kontrol et
+                const todayStr = getTodayDateString();
+                if (data.date === todayStr) {
+                    currentUsage = data; // Dünkü veriyi değil, bugünkü veriyi al
+                }
+                // (Eğer tarih farklıysa, 'currentUsage' (sıfırlanmış hali) kullanılır)
+                
+            } else {
+                 currentUserRole = 'normal'; // Varsayılan
+            }
+            
+            // YENİ: Anonim kullanıcılar için de rolü 'anonymous' yap (eğer anonimse)
+            if (auth.currentUser.isAnonymous) {
+                role = 'anonymous';
+                currentUserRole = 'anonymous';
+            }
+
+            const maxTokens = QUOTAS[role]?.tokens || 0;
+            const currentTokens = currentUsage.tokens || 0;
+
+            // 2. Admin (Sınırsız) ise, limiti kontrol etme
+            if (maxTokens === Infinity) {
+                updateTokenDisplay(0, Infinity);
+                return true; // Sınırsız
+            }
+            
+            // 3. Normal/Plus/Premium/Anonim kullanıcıysa, günlük kotayı kontrol et
+            if (currentTokens + actionCost > maxTokens) {
+                // Limit aşıldı
+                renderSystemMessage(`Günlük token limitinize ulaştınız (${currentTokens}/${maxTokens}). Bu eylem ${actionCost} token gerektiriyor. Lütfen yarın tekrar deneyin veya N0thingAI Plus'a geçin.`, "error");
+                window.openPremiumModal(); // Premium modalını aç
+                updateTokenDisplay(currentTokens, maxTokens); // UI'ı güncelle
+                return false;
+            }
+            
+            // 4. Limite ulaşılmadı, sayacı artır ve veritabanını güncelle
+            currentUsage.tokens = currentTokens + actionCost;
+            currentUsage.date = getTodayDateString(); // Tarihi güncelle
+            
+            // 'role' durumunu (varsa) koruyarak yaz
+            const existingData = profileDoc.exists() ? profileDoc.data() : {};
+            await setDoc(profileRef, { ...existingData, ...currentUsage, role: role }); 
+            dailyUsage = currentUsage; // Global kullanımı güncelle
+            updateTokenDisplay(currentUsage.tokens, maxTokens); // UI'ı güncelle
+            
+            return true; // İzin verildi
+        }
 
 
         async function sendMessage() {
@@ -1548,42 +1710,20 @@
             }
             
             const userId = auth.currentUser.uid;
-            let action = 'messages'; // Varsayılan sohbet
             
-            if (chatMode === 'image') action = 'images';
-            if (attachedImageBase64) action = 'files'; // Dosya yükleme (mesajdan daha öncelikli)
+            // YENİ: Eylem maliyetini belirle
+            let actionCost = COSTS.message; // Varsayılan sohbet
+            if (chatMode === 'image') actionCost = COSTS.image;
+            if (attachedImageBase64) actionCost = COSTS.file; 
 
-            // --- YENİ: LİMİT KONTROLÜ (Sadece ANONİM) ---
-            if (auth.currentUser.isAnonymous) {
-                // ANONİM KULLANICI
-                
-                // Görsel veya dosya yüklemeye çalışırsa engelle
-                if (action === 'images' || action === 'files') {
-                     renderSystemMessage("Görsel oluşturmak veya dosya yüklemek için lütfen giriş yapın.", "error");
-                     window.openSettingsModal();
-                     return;
-                }
-                
-                // Mesaj limitini kontrol et
-                if (anonymousMessageCount >= QUOTAS.anonymous.messages) {
-                    renderSystemMessage("Mesaj limitinize ulaştınız. Devam etmek için lütfen giriş yapın.", "error");
-                    window.openSettingsModal(); // Giriş modalını aç
-                    return; // Mesajı göndermeyi engelle
-                }
-                anonymousMessageCount++;
-                const remaining = QUOTAS.anonymous.messages - anonymousMessageCount;
-                if (remaining > 0) {
-                     renderSystemMessage(`(Kalan ${remaining} mesaj hakkınız.)`, "info");
-                } else {
-                     renderSystemMessage("Son mesaj hakkınızı kullandınız. Lütfen giriş yapın.", "info");
-                }
-            } 
-            // GİRİŞ YAPAN KULLANICILAR İÇİN LİMİT KONTROLÜ KALDIRILDI
+            // --- YENİ: LİMİT KONTROLÜ (TOKEN BAZLI) ---
+            const allowed = await checkUsageLimit(userId, actionCost);
+            if (!allowed) {
+                return; // Limit aşıldı, gönderme
+            }
             // --- LİMİT KONTROLÜ SONU ---
 
-
             // Mesajı göndermeden ÖNCE kaydet (UI ve/veya DB için)
-            // (Eğer dosya yükleniyorsa ve metin boşsa, "Görsel Analizi" gibi bir metin kaydet)
             let messageToSave = text;
             if (attachedImageBase64 && text === "") {
                 messageToSave = "(Görsel eklendi)";
@@ -1610,6 +1750,57 @@
         }
         
         // --- Attachment (Görsel Yükleme) Fonksiyonları ---
+
+        async function handleFileSelect(event) {
+            const files = event.target.files;
+            if (!files || files.length === 0) return;
+            
+            if (!auth || !auth.currentUser) {
+                renderSystemMessage("Dosya yüklemek için lütfen giriş yapın.", "error");
+                window.openSettingsModal();
+                return;
+            }
+            
+            // YENİ: Anonim kullanıcılar dosya yükleyemez (Token kontrolü sendMessage'de)
+            if (auth.currentUser.isAnonymous) {
+                renderSystemMessage("Dosya yüklemek için lütfen giriş yapın.", "error");
+                window.openSettingsModal();
+                return;
+            } 
+
+            // Sadece resim dosyalarına izin ver
+            if (!file.type.startsWith('image/')) {
+                renderSystemMessage("Hata: Yalnızca resim dosyaları yüklenebilir.", "error");
+                return;
+            }
+
+            // YENİ: Çoklu/Tekli dosya kontrolü
+            if (files.length === 1) {
+                // Sadece 1 dosya seçildi -> Düzenleyiciyi aç
+                const file = files[0];
+                openImageEditor(file);
+                
+            } else {
+                // 1'den fazla dosya seçildi
+                // Şimdilik sadece ilkini al ve uyar
+                const file = files[0];
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    attachedImageBase64 = e.target.result.split(',')[1]; 
+                    PREVIEW_IMAGE.src = e.target.result;
+                    ATTACHMENT_PREVIEW.style.display = 'block';
+                    ATTACHMENT_BTN.classList.add('text-green-500');
+                    if (chatMode === 'image') setChatMode('text', false);
+                    CHAT_INPUT.placeholder = "Görsel hakkında bir soru sorun...";
+                    
+                    renderSystemMessage(`Şu anda sadece 1 görsel yüklenebilir. İlk görsel ('${file.name}') seçildi.`, "info");
+                };
+                reader.readAsDataURL(file);
+            }
+            
+            // Aynı dosyayı tekrar seçebilmek için inputu sıfırla
+            event.target.value = null;
+        }
         
         // YENİ: Görsel Düzenleyiciyi Aç
         function openImageEditor(file) {
@@ -1643,62 +1834,6 @@
             CHAT_INPUT.placeholder = "Görsel hakkında bir soru sorun...";
             
             closeImageEditor();
-        }
-
-
-        async function handleFileSelect(event) {
-            const files = event.target.files;
-            if (!files || files.length === 0) return;
-            
-            if (!auth || !auth.currentUser) {
-                renderSystemMessage("Dosya yüklemek için lütfen giriş yapın.", "error");
-                window.openSettingsModal();
-                return;
-            }
-            
-            if (auth.currentUser.isAnonymous) {
-                renderSystemMessage("Dosya yüklemek için lütfen giriş yapın.", "error");
-                window.openSettingsModal();
-                return;
-            }
-            
-            // GİRİŞ YAPAN KULLANICILAR (Limit kaldırıldı)
-
-            // YENİ: Çoklu/Tekli dosya kontrolü
-            if (files.length === 1) {
-                // Sadece 1 dosya seçildi -> Düzenleyiciyi aç
-                const file = files[0];
-                if (!file.type.startsWith('image/')) {
-                    renderSystemMessage("Hata: Yalnızca resim dosyaları yüklenebilir.", "error");
-                    return;
-                }
-                openImageEditor(file);
-                
-            } else {
-                // 1'den fazla dosya seçildi
-                // Şimdilik sadece ilkini al ve uyar
-                const file = files[0];
-                if (!file.type.startsWith('image/')) {
-                    renderSystemMessage("Hata: Yalnızca resim dosyaları yüklenebilir.", "error");
-                    return;
-                }
-                
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    attachedImageBase64 = e.target.result.split(',')[1]; 
-                    PREVIEW_IMAGE.src = e.target.result;
-                    ATTACHMENT_PREVIEW.style.display = 'block';
-                    ATTACHMENT_BTN.classList.add('text-green-500');
-                    if (chatMode === 'image') setChatMode('text', false);
-                    CHAT_INPUT.placeholder = "Görsel hakkında bir soru sorun...";
-                    
-                    renderSystemMessage(`Şu anda sadece 1 görsel yüklenebilir. İlk görsel ('${file.name}') seçildi.`, "info");
-                };
-                reader.readAsDataURL(file);
-            }
-            
-            // Aynı dosyayı tekrar seçebilmek için inputu sıfırla
-            event.target.value = null;
         }
 
         function removeAttachment() {
@@ -1752,11 +1887,11 @@
         
         // YENİ: Premium Modal Fonksiyonları
         window.openPremiumModal = () => {
-            // Giriş yapmamışsa, önce giriş modalını aç
-            if (auth && auth.currentUser && auth.currentUser.isAnonymous) {
-                window.openSettingsModal();
-                return;
-            }
+            // // Giriş yapmamışsa, önce giriş modalını aç (Artık Anonimler de görebilir)
+            // if (auth && auth.currentUser && auth.currentUser.isAnonymous) {
+            //     window.openSettingsModal();
+            //     return;
+            // }
             if (PREMIUM_MODAL) PREMIUM_MODAL.classList.remove('hidden');
         };
         window.closePremiumModal = () => {
@@ -1832,11 +1967,13 @@
                 if (userCredential.user && db) {
                     const userId = userCredential.user.uid;
                     
-                    // GÜNLÜK KOTA KALDIRILDI, SADECE 'isPremium' kaydı
-                    const profileRef = doc(db, "users", userId, "profile", "info"); // Basit bir 'info' belgesi
+                    // HATA DÜZELTMESİ: Veri yolunu (users/{uid}/chats/--profile--) olarak güncelledim.
+                    const profileRef = doc(db, "users", userId, "chats", "--profile--"); // DİKKAT: yolu değiştirdim
                     await setDoc(profileRef, {
                         email: userCredential.user.email,
-                        isPremium: false // Varsayılan olarak premium değil
+                        role: "normal", // Varsayılan rol
+                        date: getTodayDateString(),
+                        tokens: 0,
                     });
                 }
                 
@@ -1921,7 +2058,8 @@
                     const chat = doc.data();
                     const chatId = doc.id;
                     
-                    // GÜNLÜK KOTA KALDIRILDI (Profil belgesini göstermeme kontrolü kaldırıldı)
+                    // HATA DÜZELTMESİ: Profil belgesini (kota) geçmişte gösterme
+                    if (chatId === '--profile--') return; 
 
                     const li = document.createElement('li');
                     li.className = 'chat-item'; // CSS değişkenlerini kullanan stil
@@ -1963,7 +2101,6 @@
             }
             
             // YENİ: OTURUM KALICILIĞI
-            // HATA DÜZELTMESİ: 'new' olmadan çağır
             await setPersistence(auth, browserLocalPersistence);
             
             onAuthStateChanged(auth, async (user) => {
@@ -1974,17 +2111,20 @@
                 if (unsubscribeHistory) unsubscribeHistory();
                 unsubscribeChat = null;
                 unsubscribeHistory = null;
-                // dailyUsage = {}; // GÜNLÜK KOTA KALDIRILDI
+                dailyUsage = {}; // Günlük kullanımı sıfırla
                 
                 if (user) {
                     // Kullanıcı var (Giriş yapmış veya Anonim)
                     console.log("Auth durumu değişti. Kullanıcı:", user.uid, "Anonim mi:", user.isAnonymous);
                     currentUserId = user.uid;
                     
+                    // HATA DÜZELTMESİ: Anonim dahil TÜM kullanıcılar için profil yolunu ayarla
+                    const profileRef = doc(db, "users", user.uid, "chats", "--profile--");
+                    const profileDoc = await getDoc(profileRef);
+                    
                     if (user.isAnonymous) {
                         // Anonim Kullanıcı
                         currentUserRole = 'anonymous'; // Rolü ayarla
-                        anonymousMessageCount = 0; // Toplam sayacı sıfırla
                         
                         if(LOGIN_VIEW) LOGIN_VIEW.classList.remove('hidden');
                         if(USER_PROFILE_VIEW) USER_PROFILE_VIEW.classList.add('hidden');
@@ -1998,7 +2138,7 @@
 
                     } else {
                         // Giriş Yapmış Kullanıcı (Email)
-                        currentUserRole = 'normal'; // Varsayılan rol (aşağıda değişebilir)
+                        currentUserRole = 'normal'; // Varsayılan rol
                         
                         if(LOGIN_VIEW) LOGIN_VIEW.classList.add('hidden');
                         if(USER_PROFILE_VIEW) USER_PROFILE_VIEW.classList.remove('hidden');
@@ -2006,19 +2146,42 @@
                         if (USER_NAME) USER_NAME.textContent = user.email || "Kullanıcı";
                         if (PROFILE_PIC) PROFILE_PIC.textContent = (user.email || "K")[0].toUpperCase();
                         
-                        // HATA DÜZELTMESİ: Veri yolunu (users/{uid}/profile/info) olarak güncelledim.
-                        const profileRef = doc(db, "users", user.uid, "profile", "info");
-                        const profileDoc = await getDoc(profileRef);
-                        
-                        if (profileDoc.exists() && profileDoc.data().isPremium === true) {
-                            currentUserRole = 'plus';
-                            if (PLUS_BTN) PLUS_BTN.classList.add('hidden'); // Zaten Plus ise butonu gizle
-                        } else {
-                             if (PLUS_BTN) PLUS_BTN.classList.remove('hidden'); // Plus değilse butonu göster
-                        }
-                        
                         // Kullanıcı giriş yaptı, sohbet geçmişini dinlemeye başla
                         listenToChatHistory(user.uid);
+                    }
+                    
+                    // YENİ: Token sistemini anonimler dahil herkes için yükle
+                    if (profileDoc.exists()) {
+                        const data = profileDoc.data();
+                        currentUserRole = data.role || (user.isAnonymous ? 'anonymous' : 'normal'); // Rolü al
+                        
+                        // Günlük kullanımı kontrol et (TOKEN SİSTEMİ)
+                        const todayStr = getTodayDateString();
+                        if (data.date === todayStr) {
+                            dailyUsage = data; // Bugünü al
+                        } else {
+                            dailyUsage = { tokens: 0 }; // Yeni gün, sıfırla
+                        }
+                    } else {
+                        // Profil yoksa, varsayılan oluştur (Hem anonim hem kayıtlı için)
+                        dailyUsage = { tokens: 0 };
+                        await setDoc(profileRef, {
+                            email: user.email || "anonymous",
+                            role: currentUserRole, 
+                            date: getTodayDateString(),
+                            tokens: 0
+                        });
+                    }
+
+                    // Rol'e göre Token UI'ı ayarla
+                    const maxTokens = QUOTAS[currentUserRole]?.tokens || 0;
+                    updateTokenDisplay(dailyUsage.tokens || 0, maxTokens);
+                    
+                    // Plus butonunu rol'e göre ayarla
+                    if (currentUserRole === 'plus' || currentUserRole === 'premium' || currentUserRole === 'admin') {
+                        if (PLUS_BTN) PLUS_BTN.classList.add('hidden'); // Zaten Plus (veya üstü) ise butonu gizle
+                    } else {
+                         if (PLUS_BTN) PLUS_BTN.classList.remove('hidden'); // Plus değilse butonu göster
                     }
                     
                     // Auth durumu değiştiğinde (yeni giriş/çıkış/anonim), sohbeti temizle
@@ -2029,10 +2192,10 @@
                     console.log("Kullanıcı oturumu kapalı (null).");
                     currentUserId = null;
                     currentUserRole = 'anonymous'; // Rolü anonime çek
-                    anonymousMessageCount = 0; // Sayacı sıfırla
                     
                     if(LOGIN_VIEW) LOGIN_VIEW.classList.remove('hidden');
                     if(USER_PROFILE_VIEW) USER_PROFILE_VIEW.classList.add('hidden');
+                    if (TOKEN_DISPLAY) TOKEN_DISPLAY.style.display = 'none'; // Çıkış yapınca token gösterme
                     
                     // Sohbet geçmişini (varsa) durdur
                     document.querySelectorAll('#chat-history-list .chat-item').forEach(item => item.remove());
