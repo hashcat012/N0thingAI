@@ -404,6 +404,8 @@
         /* YENİDEN EKLENDİ: Profil Görünümü (Oturum Açık) */
         #user-profile-view {
             transition: background-color 0.2s;
+            overflow: hidden;
+            white-space: nowrap;
         }
         #user-profile-view:hover {
             background-color: var(--active-chat-bg);
@@ -803,6 +805,24 @@
             transition: background-color 0.3s, color 0.3s;
             border: 1px solid var(--input-border);
         }
+        /* YENİ: Doğrulama Modalı Buton Stili */
+        .modal-content .verify-btn {
+            background-color: var(--highlight-color);
+            color: var(--sidebar-bg);
+            font-weight: 600;
+            padding: 10px;
+            border-radius: 8px;
+            transition: background-color 0.2s;
+        }
+        .modal-content .verify-btn:hover {
+             background-color: color-mix(in srgb, var(--highlight-color) 85%, black);
+        }
+        .modal-content .verify-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+
         .modal input, .modal select {
             background-color: var(--input-bg);
             color: var(--text-primary);
@@ -815,6 +835,11 @@
         }
         .social-btn:hover { background-color: var(--btn-hover); }
         .light-mode .social-btn:hover { background-color: #E0E0E0; }
+
+        /* YENİ: Başarı/Hata mesajı renkleri */
+        .text-green-500 { color: #22c55e; }
+        .text-red-500 { color: #ef4444; }
+
 
         /* Responsive Tasarım */
         @media (max-width: 768px) {
@@ -1058,6 +1083,11 @@
                     <input id="email-input" type="email" placeholder="Email adresiniz" class="w-full p-3 rounded-lg border">
                     <input id="password-input" type="password" placeholder="Şifreniz" class="w-full p-3 rounded-lg border">
                     
+                    <!-- YENİ: Şifremi Unuttum Butonu -->
+                    <div class="text-right">
+                        <button id="show-reset-btn" class="text-xs font-medium hover:underline" style="color: var(--text-secondary);">Şifrenizi mi unuttunuz?</button>
+                    </div>
+                    
                     <button id="email-signin-btn" class="w-full py-3 login-btn rounded-xl font-semibold" style="background-color: var(--highlight-color); color: var(--sidebar-bg);">
                         Email ile Giriş Yap
                     </button>
@@ -1082,6 +1112,25 @@
                     Zaten bir hesabınız var mı? 
                     <button id="show-signin-btn" class="font-bold underline hover:opacity-100" style="color: var(--text-primary);">Giriş Yapın</button>
                 </p>
+            </div>
+
+            <!-- YENİ: ŞİFRE SIFIRLAMA EKRANI -->
+            <div id="modal-reset-view" class="hidden">
+                <h2 class="text-xl font-bold mb-4 text-center">Şifremi Sıfırla</h2>
+                <p class="text-center text-sm opacity-80 mb-4" style="color: var(--text-secondary);">Sıfırlama linki göndermek için e-postanızı girin.</p>
+                
+                <p id="reset-message" class="text-center text-sm text-red-500 mb-4 hidden"></p>
+
+                <div class="space-y-4">
+                    <input id="reset-email-input" type="email" placeholder="Email adresiniz" class="w-full p-3 rounded-lg border">
+                    
+                    <button id="reset-btn" class="w-full py-3 login-btn rounded-xl font-semibold" style="background-color: var(--highlight-color); color: var(--sidebar-bg);">
+                        Sıfırlama Linki Gönder
+                    </button>
+                    <p class="text-xs text-center" style="color: var(--text-secondary);">
+                        <button id="show-signin-btn-from-reset" class="font-bold underline hover:opacity-100" style="color: var(--text-primary);">Giriş Yap'a Geri Dön</button>
+                    </p>
+                </div>
             </div>
 
 
@@ -1163,8 +1212,9 @@
                 </tbody>
             </table>
 
+            <!-- DÜZELTME: (manuel onay) yazısı kaldırıldı -->
             <p class="text-xs text-center mt-4" style="color: var(--text-secondary);">
-                Üyeliğinizi yükseltmek için (manuel onay): 
+                Üyeliğinizi yükseltmek için: 
                 <a href="mailto:n0thingaiofficial@gmail.com" class="font-bold underline" style="color: var(--highlight-color);">n0thingaiofficial@gmail.com</a>
             </p>
             
@@ -1215,6 +1265,30 @@
         </div>
     </div>
 
+    <!-- YENİ: E-POSTA DOĞRULAMA MODALI -->
+    <div id="email-verify-modal" class="modal hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center modal-overlay" style="z-index: 100;">
+        <div class="p-6 rounded-xl shadow-2xl w-full max-w-md modal-content relative text-center">
+            <i class="fas fa-envelope-open-text text-4xl mb-4" style="color: var(--highlight-color);"></i>
+            <h2 class="text-xl font-bold mb-4">Lütfen E-postanızı Doğrulayın</h2>
+            <!-- DÜZELTME: Spam uyarısı eklendi -->
+            <p class="text-sm mb-6" style="color: var(--text-secondary);">
+                Kayıt olduğunuz e-posta adresine bir doğrulama linki gönderdik. 
+                Lütfen linke tıkladıktan sonra "Kontrol Et" butonuna basın. (Gözükmezse **spam kutunuzu** kontrol etmeyi unutmayın)
+            </p>
+            <div class="space-y-3">
+                <button id="check-verify-btn" class="w-full verify-btn">
+                    Doğruladım, Kontrol Et
+                </button>
+                <button id="resend-verify-btn" class="w-full py-2 px-4 rounded-lg font-semibold border" style="border-color: var(--btn-border);">
+                    E-postayı Tekrar Gönder
+                </button>
+                <button id="signout-from-verify-btn" class="w-full py-2 px-4 text-xs" style="color: var(--text-secondary);">
+                    Çıkış Yap
+                </button>
+            </div>
+        </div>
+    </div>
+
     
     <script type="module">
         // Firebase ve Google API Entegrasyonu
@@ -1224,14 +1298,17 @@
             onAuthStateChanged, signOut,
             createUserWithEmailAndPassword,
             signInWithEmailAndPassword,
-            setPersistence, browserLocalPersistence
+            setPersistence, browserLocalPersistence,
+            sendEmailVerification,
+            sendPasswordResetEmail // YENİ: Şifre sıfırlama eklendi
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { 
             getFirestore, doc, setDoc, addDoc, collection, onSnapshot, 
             query, orderBy, serverTimestamp, getDoc,
             Timestamp, updateDoc, getDocs,
             deleteDoc,
-            runTransaction
+            runTransaction, 
+            writeBatch 
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // API Keys ve Modeller
@@ -1281,7 +1358,6 @@
         
         // Auth/Modal Elements
         const AUTH_CONTAINER = document.getElementById('auth-container');
-        // YENİDEN EKLENDİ: Profil View elementleri
         const USER_PROFILE_VIEW = document.getElementById('user-profile-view');
         const PROFILE_PIC = document.getElementById('profile-pic');
         const USER_NAME = document.getElementById('user-name');
@@ -1291,6 +1367,7 @@
         const MODAL_LOGIN_VIEW = document.getElementById('modal-login-view');
         const MODAL_SIGNUP_VIEW = document.getElementById('modal-signup-view');
         const MODAL_SETTINGS_VIEW = document.getElementById('modal-settings-view');
+        const MODAL_RESET_VIEW = document.getElementById('modal-reset-view'); // YENİ
         const THEME_SELECTOR = document.getElementById('theme-selector');
         
         const PREMIUM_MODAL = document.getElementById('premium-modal');
@@ -1298,6 +1375,7 @@
 
         const AUTH_ERROR_MESSAGE = document.getElementById('auth-error-message');
         const SIGNUP_ERROR_MESSAGE = document.getElementById('signup-error-message');
+        const RESET_MESSAGE = document.getElementById('reset-message'); // YENİ
 
         const EMAIL_INPUT = document.getElementById('email-input');
         const PASSWORD_INPUT = document.getElementById('password-input');
@@ -1306,8 +1384,12 @@
         const SIGNOUT_BTN = document.getElementById('signout-btn');
         const SHOW_SIGNUP_BTN = document.getElementById('show-signup-btn');
         const SHOW_SIGNIN_BTN = document.getElementById('show-signin-btn');
+        const SHOW_RESET_BTN = document.getElementById('show-reset-btn'); // YENİ
+        const SHOW_SIGNIN_BTN_FROM_RESET = document.getElementById('show-signin-btn-from-reset'); // YENİ
         const SIGNUP_EMAIL_INPUT = document.getElementById('signup-email-input');
         const SIGNUP_PASSWORD_INPUT = document.getElementById('signup-password-input');
+        const RESET_EMAIL_INPUT = document.getElementById('reset-email-input'); // YENİ
+        const RESET_BTN = document.getElementById('reset-btn'); // YENİ
 
         // Mobil & Katlanabilir Sidebar
         const SIDEBAR = document.getElementById('sidebar');
@@ -1338,6 +1420,8 @@
         const DELETE_CONFIRM_MODAL = document.getElementById('delete-confirm-modal');
         const CANCEL_DELETE_BTN = document.getElementById('cancel-delete-btn');
         const CONFIRM_DELETE_BTN = document.getElementById('confirm-delete-btn');
+        // YENİ: E-posta Doğrulama Modalı DOM
+        const EMAIL_VERIFY_MODAL = document.getElementById('email-verify-modal');
 
 
         // --- KOTA LİMİTLERİ (TOKEN) ---
@@ -1887,6 +1971,13 @@
                 window.openSettingsModal();
                 return;
             }
+
+            // YENİ: E-posta doğrulanmamışsa mesaj göndermeyi engelle
+            if (!auth.currentUser.isAnonymous && !auth.currentUser.emailVerified) {
+                renderSystemMessage("Mesaj göndermek için lütfen e-postanızı doğrulayın.", "error");
+                EMAIL_VERIFY_MODAL.classList.remove('hidden');
+                return;
+            }
             
             const userId = auth.currentUser.uid;
             
@@ -1941,6 +2032,13 @@
                 window.openSettingsModal();
                 return;
             } 
+
+            // YENİ: E-posta doğrulaması kontrolü
+            if (!auth.currentUser.emailVerified) {
+                renderSystemMessage("Dosya yüklemek için lütfen e-postanızı doğrulayın.", "error");
+                EMAIL_VERIFY_MODAL.classList.remove('hidden');
+                return;
+            }
 
             const file = files[0];
 
@@ -2022,18 +2120,24 @@
                 console.error("Modal elementleri bulunamadı.");
                 return;
             }
+            // YENİ: Tüm mesajları temizle
             if(AUTH_ERROR_MESSAGE) AUTH_ERROR_MESSAGE.classList.add('hidden');
             if(SIGNUP_ERROR_MESSAGE) SIGNUP_ERROR_MESSAGE.classList.add('hidden');
+            if(RESET_MESSAGE) RESET_MESSAGE.classList.add('hidden');
             
             SETTINGS_MODAL.classList.remove('hidden');
             
             if (auth && auth.currentUser && !auth.currentUser.isAnonymous) {
+                // Giriş yapmış kullanıcı -> Ayarları göster
                 MODAL_LOGIN_VIEW.classList.add('hidden');
                 MODAL_SIGNUP_VIEW.classList.add('hidden');
+                MODAL_RESET_VIEW.classList.add('hidden');
                 MODAL_SETTINGS_VIEW.classList.remove('hidden');
             } else {
+                // Giriş yapmamış/Anonim -> Giriş ekranını göster
                 MODAL_LOGIN_VIEW.classList.remove('hidden');
                 MODAL_SIGNUP_VIEW.classList.add('hidden');
+                MODAL_RESET_VIEW.classList.add('hidden');
                 MODAL_SETTINGS_VIEW.classList.add('hidden');
             }
             
@@ -2055,6 +2159,8 @@
             let errorMessage = "Bilinmeyen bir hata oluştu.";
             if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
                 errorMessage = "Girdiğiniz e-posta veya şifre yanlış.";
+            } else if (error.code === 'auth/email-not-verified') {
+                errorMessage = "Hesap kayıtlı ancak e-posta doğrulanmamış. Lütfen gelen kutunuzu (ve spam) kontrol edin.";
             } else if (error.code === 'auth/email-already-in-use') {
                 errorMessage = "Bu e-posta adresi zaten kayıtlı.";
             } else if (error.code === 'auth/weak-password') {
@@ -2067,12 +2173,13 @@
                 errorMessage = error.message;
             }
 
-            if (view === 'login' && AUTH_ERROR_MESSAGE) {
-                AUTH_ERROR_MESSAGE.textContent = errorMessage;
-                AUTH_ERROR_MESSAGE.classList.remove('hidden');
-            } else if (view === 'signup' && SIGNUP_ERROR_MESSAGE) {
-                SIGNUP_ERROR_MESSAGE.textContent = errorMessage;
-                SIGNUP_ERROR_MESSAGE.classList.remove('hidden');
+            // YENİ: Hata mesajı elementini dinamik seç
+            const el = (view === 'login') ? AUTH_ERROR_MESSAGE : (view === 'signup') ? SIGNUP_ERROR_MESSAGE : RESET_MESSAGE;
+
+            if (el) {
+                el.textContent = errorMessage;
+                el.classList.remove('hidden', 'text-green-500'); // Başarı rengini kaldır
+                el.classList.add('text-red-500'); // Hata rengini ekle
             } else {
                 renderSystemMessage(`**Giriş Hatası:** ${errorMessage}`, "error");
             }
@@ -2081,6 +2188,7 @@
 
         async function signInWithEmail() {
             if (!auth) return;
+            AUTH_ERROR_MESSAGE.classList.add('hidden'); // Hata mesajını temizle
             try {
                 const email = EMAIL_INPUT.value;
                 const password = PASSWORD_INPUT.value;
@@ -2088,8 +2196,17 @@
                     renderAuthError({ code: 'auth/missing-fields', message: "Email ve şifre alanları boş bırakılamaz." }, 'login');
                     return;
                 }
-                await signInWithEmailAndPassword(auth, email, password);
+                
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                
+                if (!userCredential.user.emailVerified) {
+                    await signOut(auth);
+                    renderAuthError({ code: 'auth/email-not-verified' }, 'login');
+                    return;
+                }
+
                 window.closeSettingsModal();
+
             } catch (error) {
                 console.error("Email Giriş Hatası:", error);
                 renderAuthError(error, "login");
@@ -2098,6 +2215,7 @@
 
         async function signUpWithEmail() {
             if (!auth) return;
+            SIGNUP_ERROR_MESSAGE.classList.add('hidden'); // Hata mesajını temizle
             try {
                 const email = SIGNUP_EMAIL_INPUT.value;
                 const password = SIGNUP_PASSWORD_INPUT.value;
@@ -2112,6 +2230,15 @@
                 
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 
+                try {
+                    await sendEmailVerification(userCredential.user);
+                    renderSystemMessage("**Kayıt başarılı!** Lütfen e-postanıza gönderilen doğrulama linkine tıklayın. (Gözükmezse **spam kutunuzu** kontrol edin)", "info");
+                    console.log("Doğrulama e-postası gönderildi.");
+                } catch (verifyError) {
+                    console.error("Doğrulama e-postası gönderilemedi:", verifyError);
+                    renderSystemMessage("**Kayıt başarılı, ancak doğrulama e-postası gönderilemedi.** Lütfen 'Ayarlar' bölümünden tekrar göndermeyi deneyin.", "error");
+                }
+
                 if (userCredential.user && db) {
                     const userId = userCredential.user.uid;
                     
@@ -2125,10 +2252,42 @@
                 }
                 
                 window.closeSettingsModal();
-                renderSystemMessage("**Başarılı:** Kayıt oldunuz ve giriş yaptınız.");
+                // onAuthStateChanged tetiklenecek ve doğrulama modalını gösterecek.
             } catch (error) {
                 console.error("Email Kayıt Hatası:", error);
                 renderAuthError(error, "signup");
+            }
+        }
+
+        // YENİ: Şifre Sıfırlama Fonksiyonu
+        async function sendPasswordReset() {
+            if (!auth) return;
+            RESET_MESSAGE.classList.add('hidden'); // Mesajı temizle
+            const email = RESET_EMAIL_INPUT.value;
+
+            if (!email) {
+                renderAuthError({ code: 'auth/invalid-email', message: "Lütfen e-posta adresinizi girin." }, 'reset');
+                return;
+            }
+
+            RESET_BTN.disabled = true;
+            RESET_BTN.textContent = "Gönderiliyor...";
+
+            try {
+                await sendPasswordResetEmail(auth, email);
+                
+                // Başarılı
+                RESET_MESSAGE.textContent = "Sıfırlama linki gönderildi. Gelen kutunuzu (ve spam) kontrol edin.";
+                RESET_MESSAGE.classList.remove('hidden', 'text-red-500');
+                RESET_MESSAGE.classList.add('text-green-500'); // Yeşil başarı mesajı
+
+            } catch (error) {
+                // Hata
+                console.error("Şifre Sıfırlama Hatası:", error);
+                renderAuthError(error, 'reset'); // Hata mesajını göster
+            } finally {
+                RESET_BTN.disabled = false;
+                RESET_BTN.textContent = "Sıfırlama Linki Gönder";
             }
         }
 
@@ -2138,6 +2297,7 @@
             try {
                 await signOut(auth);
                 window.closeSettingsModal();
+                EMAIL_VERIFY_MODAL.classList.add('hidden');
                 renderSystemMessage("Başarıyla çıkış yaptınız.");
             } catch (error) {
                  console.error("Çıkış Hatası:", error);
@@ -2289,33 +2449,33 @@
             
             await setPersistence(auth, browserLocalPersistence);
             
-            // DÜZELTME: Artık login-btn'i değil, view'ları yönetiyoruz
-            // Buton içeriğini değiştirmek için referanslar
-            // const loginBtn = document.getElementById('login-btn'); // Bu artık kullanılmıyor
-            // const loginBtnIcon = loginBtn.querySelector('i');
-            // const loginBtnText = loginBtn.querySelector('.btn-text');
-
             onAuthStateChanged(auth, async (user) => {
                 
+                // Önceki dinleyicileri ve modalı temizle
                 if (unsubscribeChat) unsubscribeChat();
                 if (unsubscribeHistory) unsubscribeHistory();
                 unsubscribeChat = null;
                 unsubscribeHistory = null;
                 dailyUsage = {};
+                EMAIL_VERIFY_MODAL.classList.add('hidden');
                 
                 if (user) {
                     console.log("Auth durumu değişti. Kullanıcı:", user.uid, "Anonim mi:", user.isAnonymous);
                     currentUserId = user.uid;
+                    
+                    // YENİ: Kullanıcıyı yeniden yükle (e-posta durumunu tazelemek için)
+                    // (Sayfa yenilendiğinde bu gerekli)
+                    await user.reload(); 
+                    // 'user' objesi artık taze 'emailVerified' bilgisine sahip
+
                     const profileRef = doc(db, "users", user.uid, "chats", "--profile--");
                     const profileDoc = await getDoc(profileRef);
 
                     if (user.isAnonymous) {
                         // --- ANONİM KULLANICI ---
                         currentUserRole = 'anonymous';
-                        
-                        // DÜZELTME: View'ları değiştir
                         if(LOGIN_VIEW) LOGIN_VIEW.classList.remove('hidden'); 
-                        if(USER_PROFILE_VIEW) USER_PROFILE_VIEW.classList.add('hidden'); // Profili gizle
+                        if(USER_PROFILE_VIEW) USER_PROFILE_VIEW.classList.add('hidden');
                         
                         if (PLUS_BTN) PLUS_BTN.classList.remove('hidden');
                         
@@ -2336,18 +2496,40 @@
                         dailyUsage = { tokens: currentTokens };
                         const maxTokens = QUOTAS.anonymous.tokens;
                         updateTokenDisplay(dailyUsage.tokens, maxTokens);
+                        
+                        // Anonim kullanıcı için sohbeti başlat
+                        await startNewChat();
 
                     } else {
                         // --- GİRİŞ YAPMIŞ KULLANICI ---
-                        
-                        // DÜZELTME: View'ları değiştir
-                        if(LOGIN_VIEW) LOGIN_VIEW.classList.add('hidden'); // Giriş butonunu gizle
-                        if(USER_PROFILE_VIEW) USER_PROFILE_VIEW.classList.remove('hidden'); // Profili göster
 
-                        // YENİ: Profil içeriğini doldur
+                        // YENİ: E-POSTA DOĞRULAMA KONTROLÜ
+                        if (!user.emailVerified) {
+                            console.warn("Kullanıcının e-postası doğrulanmamış.");
+                            EMAIL_VERIFY_MODAL.classList.remove('hidden');
+                            
+                            // Kalan her şeyi kilitle
+                            if(LOGIN_VIEW) LOGIN_VIEW.classList.add('hidden');
+                            if(USER_PROFILE_VIEW) USER_PROFILE_VIEW.classList.add('hidden');
+                            if (TOKEN_DISPLAY) TOKEN_DISPLAY.style.display = 'none';
+                            document.querySelectorAll('#chat-history-list .chat-item').forEach(item => {
+                                if (item.id !== 'current-mode-display') item.remove();
+                            });
+
+                            // Sohbet alanını kilitle
+                            MESSAGES_CONTAINER.innerHTML = '';
+                            renderSystemMessage("Hesabınızı kullanmak için lütfen e-postanızı doğrulayın. Gelen kutunuzu (ve spam) kontrol edin.", "error");
+                            toggleInput(true); // Sohbet input'unu kilitle
+                            return; // Fonksiyonun geri kalanını çalıştırma
+                        }
+                        // --- E-POSTA KONTROLÜ SONU ---
+
+                        // E-posta doğrulandıysa normal devam et
+                        if(LOGIN_VIEW) LOGIN_VIEW.classList.add('hidden');
+                        if(USER_PROFILE_VIEW) USER_PROFILE_VIEW.classList.remove('hidden'); 
+
                         if (USER_NAME) USER_NAME.textContent = user.email || "Kullanıcı";
                         if (PROFILE_PIC) PROFILE_PIC.textContent = (user.email || "K")[0].toUpperCase();
-
 
                         let role = 'normal';
                         let currentTokens = 0;
@@ -2391,9 +2573,8 @@
                         }
 
                         listenToChatHistory(user.uid);
+                        await startNewChat(); // Sohbeti başlat
                     }
-
-                    await startNewChat(); 
 
                 } else {
                     // --- KULLANICI ÇIKIŞ YAPTI (null) ---
@@ -2401,7 +2582,6 @@
                     currentUserId = null;
                     currentUserRole = 'anonymous';
                     
-                    // DÜZELTME: View'ları değiştir
                     if(LOGIN_VIEW) LOGIN_VIEW.classList.remove('hidden');
                     if(USER_PROFILE_VIEW) USER_PROFILE_VIEW.classList.add('hidden');
 
@@ -2415,6 +2595,7 @@
                     try {
                         await signInAnonymously(auth);
                         console.log("Çıkış yapıldı, anonim olarak tekrar giriş yapıldı.");
+                        // onAuthStateChanged tekrar tetiklenecek ve anonim bloğunu çalıştıracak
                     } catch (error) {
                         console.error("Anonim giriş hatası (çıkış sonrası):", error);
                         renderSystemMessage(`**Kritik Hata:** Anonim oturum başlatılamadı. ${error.message}.`, "error");
@@ -2545,18 +2726,20 @@
 
         function closeChatContextMenu() {
             CHAT_CONTEXT_MENU.classList.add('hidden');
-            contextMenuChatId = null;
+            // DİKKAT: contextMenuChatId'yi burada null yapma,
+            // openDeleteModal veya renameChat fonksiyonları onu kullanacak.
+            // Onların içinde null yapılacak.
         }
 
         async function renameChat() {
-            if (!contextMenuChatId || !currentUserId) return;
+            const chatId = contextMenuChatId; // ID'yi yakala
+            closeChatContextMenu(); // Menüyü kapat
+            if (!chatId || !currentUserId) return;
             
-            const chatRef = doc(db, "users", currentUserId, "chats", contextMenuChatId);
+            const chatRef = doc(db, "users", currentUserId, "chats", chatId);
             const chatDoc = await getDoc(chatRef);
             const currentTitle = chatDoc.data().title || "";
 
-            // GÜNCELLEME: alert/prompt yerine özel bir modal lazım, ama şimdilik prompt
-            // UYARI: Bu prompt, iframe/sandbox ortamlarında çalışmayabilir.
             const newTitle = prompt("Sohbet için yeni bir başlık girin:", currentTitle);
 
             if (newTitle && newTitle.trim() !== "" && newTitle !== currentTitle) {
@@ -2570,13 +2753,18 @@
                     renderSystemMessage("Başlık güncellenirken bir hata oluştu.", "error");
                 }
             }
+            contextMenuChatId = null; // İşlem bitince ID'yi temizle
         }
 
         function openDeleteModal() {
+            // ID'yi 'contextMenuChatId'den alıp modal açılınca orada tutuyoruz.
+            // closeChatContextMenu ID'yi null yapacağı için
+            // ID'yi burada kontrol etmemiz lazım.
             if (!contextMenuChatId) return;
-            // Menüyü kapat, silme modalını aç
-            CHAT_CONTEXT_MENU.classList.add('hidden');
+            
+            closeChatContextMenu(); // Menüyü kapat
             DELETE_CONFIRM_MODAL.classList.remove('hidden');
+            // ID, silme onayı verilene kadar contextMenuChatId'de kalır
         }
 
         function closeDeleteModal() {
@@ -2590,37 +2778,34 @@
             const chatIdToDelete = contextMenuChatId;
             const userId = currentUserId;
             
-            // Modalı hemen kapat
-            closeDeleteModal(); 
+            closeDeleteModal(); // Bu, contextMenuChatId'yi null yapar
             
             console.log(`Sohbet siliniyor: ${chatIdToDelete}`);
 
             try {
-                // Bu sohbetin ana dokümanını sil
-                const chatRef = doc(db, "users", userId, "chats", chatIdToDelete);
+                // 1. Adım: Tüm alt mesajları (messages) sil
+                const messagesRef = collection(db, "users", userId, "chats", chatIdToDelete, "messages");
+                const messagesSnapshot = await getDocs(messagesRef);
                 
-                // YENİ: Transactioın ile alt koleksiyonu silme (Daha yavaş ama tarayıcıda çalışır)
-                // Bu işlem, çok fazla mesaj varsa zaman aşımına uğrayabilir
-                // veya maliyetli olabilir. İdeal olanı Cloud Function'dır.
-                await runTransaction(db, async (transaction) => {
-                    const messagesRef = collection(db, "users", userId, "chats", chatIdToDelete, "messages");
-                    const messagesSnapshot = await getDocs(messagesRef);
-                    messagesSnapshot.forEach((msgDoc) => {
-                        transaction.delete(msgDoc.ref);
-                    });
-                    transaction.delete(chatRef);
+                const batch = writeBatch(db);
+                messagesSnapshot.forEach((msgDoc) => {
+                    batch.delete(msgDoc.ref);
                 });
+                await batch.commit(); // Tüm mesajları sil
+
+                // 2. Adım: Mesajlar silindikten sonra ana sohbet belgesini sil
+                const chatRef = doc(db, "users", userId, "chats", chatIdToDelete);
+                await deleteDoc(chatRef);
 
                 console.log("Sohbet ve mesajları başarıyla silindi.");
 
-                // Eğer silinen sohbet, şu an açık olan sohbetse:
                 if (chatIdToDelete === currentChatId) {
                     await startNewChat();
                 }
 
             } catch (error) {
                 console.error("Sohbet silinirken hata:", error);
-                renderSystemMessage("Sohbet silinirken bir hata oluştu. (Not: Çok fazla mesaj içeren sohbetler tarayıcıdan silinemeyebilir.)", "error");
+                renderSystemMessage("Sohbet silinirken bir hata oluştu.", "error");
             }
         }
 
@@ -2654,19 +2839,36 @@
             EMAIL_SIGNIN_BTN.addEventListener('click', signInWithEmail);
             SIGNUP_BTN.addEventListener('click', signUpWithEmail);
             SIGNOUT_BTN.addEventListener('click', signOutUser);
+            RESET_BTN.addEventListener('click', sendPasswordReset); // YENİ
             
             PLUS_BTN.addEventListener('click', window.openPremiumModal);
 
+            // YENİ: Auth Modal Geçişleri
             SHOW_SIGNUP_BTN.addEventListener('click', () => {
                 MODAL_LOGIN_VIEW.classList.add('hidden');
+                MODAL_RESET_VIEW.classList.add('hidden');
                 MODAL_SIGNUP_VIEW.classList.remove('hidden');
                 if(AUTH_ERROR_MESSAGE) AUTH_ERROR_MESSAGE.classList.add('hidden');
             });
             SHOW_SIGNIN_BTN.addEventListener('click', () => {
                 MODAL_LOGIN_VIEW.classList.remove('hidden');
                 MODAL_SIGNUP_VIEW.classList.add('hidden');
+                MODAL_RESET_VIEW.classList.add('hidden');
                 if(SIGNUP_ERROR_MESSAGE) SIGNUP_ERROR_MESSAGE.classList.add('hidden');
             });
+            SHOW_RESET_BTN.addEventListener('click', () => {
+                MODAL_LOGIN_VIEW.classList.add('hidden');
+                MODAL_SIGNUP_VIEW.classList.add('hidden');
+                MODAL_RESET_VIEW.classList.remove('hidden');
+                if(AUTH_ERROR_MESSAGE) AUTH_ERROR_MESSAGE.classList.add('hidden');
+            });
+            SHOW_SIGNIN_BTN_FROM_RESET.addEventListener('click', () => {
+                MODAL_LOGIN_VIEW.classList.remove('hidden');
+                MODAL_SIGNUP_VIEW.classList.add('hidden');
+                MODAL_RESET_VIEW.classList.add('hidden');
+                if(RESET_MESSAGE) RESET_MESSAGE.classList.add('hidden');
+            });
+
             
             // Tema
             THEME_SELECTOR.addEventListener('change', (e) => {
@@ -2692,12 +2894,111 @@
             }
 
             // YENİ: Geçmiş Menüsü Olayları
-            RENAME_CHAT_BTN.addEventListener('click', renameChat);
-            DELETE_CHAT_BTN.addEventListener('click', openDeleteModal);
+            // DÜZELTME: Event bubbling'i durdurmak için 'e.stopPropagation()' eklendi
+            RENAME_CHAT_BTN.addEventListener('click', (e) => {
+                e.stopPropagation(); // Bubbling'i durdur (document listener'ı tetiklemesin)
+                renameChat();
+            });
+            DELETE_CHAT_BTN.addEventListener('click', (e) => {
+                e.stopPropagation(); // Bubbling'i durdur (document listener'ı tetiklemesin)
+                openDeleteModal();
+            });
             // YENİ: Silme Modalı Olayları
             CANCEL_DELETE_BTN.addEventListener('click', closeDeleteModal);
             CONFIRM_DELETE_BTN.addEventListener('click', confirmDeleteChat);
             
+            // YENİ: E-posta Doğrulama Modal Butonları
+            const RESEND_VERIFY_BTN = document.getElementById('resend-verify-btn');
+            const CHECK_VERIFY_BTN = document.getElementById('check-verify-btn');
+            const SIGNOUT_FROM_VERIFY_BTN = document.getElementById('signout-from-verify-btn');
+            
+            // DÜZELTME: Cooldown için helper fonksiyonu
+            function setResendButtonCooldown(cooldownEndTime) {
+                const now = Date.now();
+                if (now < cooldownEndTime) {
+                    RESEND_VERIFY_BTN.disabled = true;
+                    const secondsLeft = Math.ceil((cooldownEndTime - now) / 1000);
+                    RESEND_VERIFY_BTN.textContent = `${secondsLeft}sn bekleyin...`;
+                    
+                    const interval = setInterval(() => {
+                        const now = Date.now();
+                        if (now >= cooldownEndTime) {
+                            clearInterval(interval);
+                            RESEND_VERIFY_BTN.disabled = false;
+                            RESEND_VERIFY_BTN.textContent = "E-postayı Tekrar Gönder";
+                        } else {
+                            const secondsLeft = Math.ceil((cooldownEndTime - now) / 1000);
+                            RESEND_VERIFY_BTN.textContent = `${secondsLeft}sn bekleyin...`;
+                        }
+                    }, 1000);
+                } else {
+                    RESEND_VERIFY_BTN.disabled = false;
+                    RESEND_VERIFY_BTN.textContent = "E-postayı Tekrar Gönder";
+                }
+            }
+
+            RESEND_VERIFY_BTN.addEventListener('click', async () => {
+                // DÜZELTME: Cooldown'u localStorage'dan kontrol et
+                const now = Date.now();
+                const cooldownEndTime = parseInt(localStorage.getItem('resendCooldownUntil') || '0');
+
+                if (now < cooldownEndTime) {
+                    renderSystemMessage("Lütfen tekrar göndermeden önce bekleyin.", "error");
+                    return;
+                }
+                if (!auth.currentUser) return;
+
+                try {
+                    await sendEmailVerification(auth.currentUser);
+                    renderSystemMessage("Doğrulama e-postası tekrar gönderildi.");
+                    
+                    // DÜZELTME: 60 saniyelik Cooldown'u localStorage'a ayarla
+                    const newCooldownEndTime = Date.now() + 60000; // 60 saniye
+                    localStorage.setItem('resendCooldownUntil', newCooldownEndTime);
+                    setResendButtonCooldown(newCooldownEndTime); // UI'ı güncelle
+
+                } catch (error) {
+                    console.error("E-posta tekrar gönderilemedi:", error);
+                    
+                    // DÜZELTME: "too-many-requests" hatasını yakala ve kullanıcıya bildir
+                    if (error.code === 'auth/too-many-requests') {
+                        renderSystemMessage("Çok fazla istek gönderildi. Lütfen daha sonra tekrar deneyin.", "error");
+                        // Sunucudan bu hatayı alırsak, client-side'a daha uzun bir ceza koyalım
+                        const newCooldownEndTime = Date.now() + 300000; // 5 dakika
+                        localStorage.setItem('resendCooldownUntil', newCooldownEndTime);
+                        setResendButtonCooldown(newCooldownEndTime);
+                    } else {
+                        renderSystemMessage(`Hata: ${error.message}`, "error");
+                    }
+                }
+            });
+
+            CHECK_VERIFY_BTN.addEventListener('click', async () => {
+                if (!auth.currentUser) return;
+                
+                CHECK_VERIFY_BTN.disabled = true;
+                CHECK_VERIFY_BTN.textContent = "Kontrol ediliyor...";
+
+                // Kullanıcının durumunu Firebase sunucularından yeniden yükle
+                await auth.currentUser.reload();
+                
+                if (auth.currentUser.emailVerified) {
+                    renderSystemMessage("E-posta doğrulandı! Sayfa yeniden yükleniyor...", "info");
+                    // En basit yöntem: Sayfayı yeniden yükle.
+                    // onAuthStateChanged taze 'emailVerified: true' ile çalışacak.
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    renderSystemMessage("E-posta hala doğrulanmamış görünüyor. Lütfen linke tıkladığınızdan emin olun.", "error");
+                    CHECK_VERIFY_BTN.disabled = false;
+                    CHECK_VERIFY_BTN.textContent = "Doğruladım, Kontrol Et";
+                }
+            });
+
+            SIGNOUT_FROM_VERIFY_BTN.addEventListener('click', async () => {
+                await signOut(auth);
+                // onAuthStateChanged zaten tetiklenecek ve anonim girişi halledecek.
+            });
+
             // YENİ: Geçmiş Arama Olayı
             CHAT_SEARCH_INPUT.addEventListener('input', (e) => {
                 const searchTerm = e.target.value.toLowerCase();
@@ -2730,6 +3031,12 @@
             // 3. Auth dinleyicisini kur
             setupAuthListener(); 
             
+            // 4. DÜZELTME: Sayfa yüklendiğinde mevcut bekleme süresini kontrol et
+            const initialCooldown = parseInt(localStorage.getItem('resendCooldownUntil') || '0');
+            if (initialCooldown > Date.now()) {
+                setResendButtonCooldown(initialCooldown);
+            }
+
         });
     </script>
 </body>
