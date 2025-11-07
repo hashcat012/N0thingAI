@@ -869,7 +869,7 @@
                       </select>
                  </div>
                  <button id="signout-btn" class="w-full p-3 mt-4 rounded-lg font-semibold border" style="border-color: var(--btn-border); transition: background-color 0.2s;">
-                     <i class="fas fa-sign-out-alt mr-2"></i> Çıkış Yap
+                    <i class="fas fa-sign-out-alt mr-2"></i> Çıkış Yap
                  </button>
             </div>
             
@@ -2433,20 +2433,24 @@
             // 1. Auth dinleyicisini kur (Kalıcılık ayarından SONRA)
             setupAuthListener(); 
             
-            // 2. Başlangıçta anonim giriş yapmayı dene
-            // (onAuthStateChanged zaten tetiklenecek, ancak mevcut bir oturum yoksa
-            // (ilk ziyaret), 'null' döndürür. Null durumunda zaten anonim girişi
-            // 'setupAuthListener' içinde yapıyoruz.)
+            // 2. Başlangıçta anonim giriş yapmayı dene (KALDIRILDI)
+            // HATA DÜZELTMESİ: Buradaki blok, `onAuthStateChanged` henüz kalıcı
+            // oturumu yüklemeden (yarış durumu) anonim girişi tetikliyordu.
+            // Bu mantık artık tamamen `onAuthStateChanged` içindeki 'else' 
+            // (user == null) durumu tarafından yönetilmektedir.
+            
+            /*
+            // --- HATALI KOD BLOKU (KALDIRILDI) ---
             if (auth && !auth.currentUser) {
                 try {
                     await signInAnonymously(auth);
                     console.log("Başarılı anonim giriş.");
-                    // Bu, 'setupAuthListener'ı tetikleyecek (user.isAnonymous = true)
                 } catch (error) {
                     console.error("Başlangıç anonim giriş hatası:", error);
                     renderSystemMessage(`**Kritik Hata:** Oturum başlatılamadı. ${error.message}. Lütfen Firebase konsolunuzda 'Anonymous' (Anonim) giriş yöntemini etkinleştirdiğinizden emin olun.`, "error");
                 }
             }
+            */
         });
     </script>
 </body>
