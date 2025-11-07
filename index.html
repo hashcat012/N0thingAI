@@ -780,7 +780,7 @@
                     <!-- YENİ: Multiple (Çoklu) eklendi -->
                     <input type="file" id="file-input" accept="image/*" class="hidden" multiple>
 
-                    <!-- Görsel Oluşturma butonu (Hugging Face'e bağlı) -->
+                    <!-- Görsel Oluşturma butonu (Artık Pollinations'a bağlı) -->
                     <button class="icon-btn" id="image-mode-btn" title="Görsel Oluşturma Modu">
                         <i class="fas fa-palette"></i>
                     </button>
@@ -853,20 +853,20 @@
                  
                  <!-- YENİ: Dil Seçimi -->
                  <div class="mb-4">
-                     <label for="language-selector" class="block text-sm font-medium mb-2" style="color: var(--text-secondary);">Dil Seçimi</label>
-                     <select id="language-selector" class="w-full p-3 rounded-lg border" style="background-color: var(--input-bg); color: var(--text-primary); border-color: var(--input-border);">
-                         <option value="tr">Türkçe</option> 
-                         <option value="en">English</option>
-                     </select>
+                      <label for="language-selector" class="block text-sm font-medium mb-2" style="color: var(--text-secondary);">Dil Seçimi</label>
+                      <select id="language-selector" class="w-full p-3 rounded-lg border" style="background-color: var(--input-bg); color: var(--text-primary); border-color: var(--input-border);">
+                          <option value="tr">Türkçe</option> 
+                          <option value="en">English</option>
+                      </select>
                  </div>
                  
                  <div class="mb-4">
-                     <label for="theme-selector" class="block text-sm font-medium mb-2" style="color: var(--text-secondary);">Tema Seçimi</label>
-                     <select id="theme-selector" class="w-full p-3 rounded-lg border" style="background-color: var(--input-bg); color: var(--text-primary); border-color: var(--input-border);">
-                         <!-- Düzeltildi: Varsayılan Gri/Beyaz Tema -->
-                         <option value="dark-mode">Koyu Tema (Gri/Beyaz)</option> 
-                         <option value="light-mode">Açık Tema (Beyaz/Gri)</option>
-                     </select>
+                      <label for="theme-selector" class="block text-sm font-medium mb-2" style="color: var(--text-secondary);">Tema Seçimi</label>
+                      <select id="theme-selector" class="w-full p-3 rounded-lg border" style="background-color: var(--input-bg); color: var(--text-primary); border-color: var(--input-border);">
+                          <!-- Düzeltildi: Varsayılan Gri/Beyaz Tema -->
+                          <option value="dark-mode">Koyu Tema (Gri/Beyaz)</option> 
+                          <option value="light-mode">Açık Tema (Beyaz/Gri)</option>
+                      </select>
                  </div>
                  <button id="signout-btn" class="w-full p-3 mt-4 rounded-lg font-semibold border" style="border-color: var(--btn-border); transition: background-color 0.2s;">
                      <i class="fas fa-sign-out-alt mr-2"></i> Çıkış Yap
@@ -986,11 +986,9 @@
         const GEMINI_API_KEY = "AIzaSyCx4u1qHGlysIGpm1Zw0YBfXlqEXJ1BlvM"; 
         const CHAT_MODEL = "gemini-2.5-flash-preview-09-2025";
         
-        // 2. GÖRSEL OLUŞTURMA (Hugging Face)
-        // GÜVENLİK UYARISI: Bu anahtar tarayıcıda görünür.
-        // Hugging Face ayarlarınızdan "Web" (Tarayıcı) kullanımına izin verdiğinizden emin olun.
-        const HUGGINGFACE_API_KEY = "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"; // Bu anahtarı kullan
-        const IMAGE_GEN_MODEL = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0";
+        // 2. GÖRSEL OLUŞTURMA (Pollinations)
+        // GÜNCELLEME: Pollinations API'si anahtar (key) gerektirmez.
+        const IMAGE_GEN_MODEL = "https://image.pollinations.ai/prompt/"; // Ana URL
         
         
         // --- KULLANICININ YENİ FIREBASE CONFIG BİLGİSİ ---
@@ -1128,22 +1126,36 @@
 
 
         /**
-         * API Çağrısını Üstlenir (HİBRİT: Gemini ve Hugging Face)
-         * model: 'gemini' or 'huggingface'
-         * payload: API'ye gönderilecek JSON gövdesi
-         * apiKey: Kullanılacak API anahtarı
+         * API Çağrısını Üstlenir (HİBRİT: Gemini ve Pollinations)
+         * model: 'gemini' or 'pollinations'
+         * payload: API'ye gönderilecek JSON gövdesi (Gemini) VEYA {inputs: "prompt"} (Pollinations)
+         * apiKey: Kullanılacak API anahtarı (Gemini için)
          */
         async function fetchWithRetry(model, payload, apiKey, isTitleGeneration = false) {
             let url = '';
             let headers = { 'Content-Type': 'application/json' };
             let responseType = 'json'; // Varsayılan yanıt tipi
+            
+            // GÜNCELLEME: fetchOptions varsayılan olarak POST oldu
+            let fetchOptions = {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify(payload)
+            };
 
             if (model === 'gemini') {
                 url = `https://generativelanguage.googleapis.com/v1beta/models/${CHAT_MODEL}:generateContent?key=${apiKey}`;
-            } else if (model === 'huggingface') {
-                url = IMAGE_GEN_MODEL; // HF URL
-                headers['Authorization'] = `Bearer ${apiKey}`; // HF Auth Header
-                responseType = 'blob'; // HF görsel yanıtı blob'dur
+                // fetchOptions (default POST) uygundur
+            } else if (model === 'pollinations') {
+                // Payload'dan prompt'u alıp URL'ye uygun hale getir
+                const prompt = encodeURIComponent(payload.inputs); 
+                url = `${IMAGE_GEN_MODEL}${prompt}`; // URL'nin sonuna prompt'u ekle
+                responseType = 'blob'; // Yanıt tipi blob (görsel)
+                fetchOptions = { // GÜNCELLEME: GET isteği
+                    method: 'GET'
+                    // Body yok, Auth yok
+                };
+                headers = {}; // GET için content-type gerekmez
             } else {
                 renderSystemMessage("Hata: Geçersiz API modeli.", "error");
                 return null;
@@ -1155,17 +1167,13 @@
 
             while (attempt < MAX_RETRIES) {
                 try {
-                    const response = await fetch(url, {
-                        method: 'POST',
-                        headers: headers,
-                        body: JSON.stringify(payload)
-                    });
+                    // GÜNCELLEME: fetchOptions kullanılıyor
+                    const response = await fetch(url, fetchOptions);
 
-                    if (response.status === 503) { // HF Model yükleniyor
-                        throw new Error("503");
-                    }
+                    // GÜNCELLEME: 503 (HF) hatası kaldırıldı
+                    
                     if (!response.ok) {
-                        // HF hatası (JSON değilse)
+                        // Pollinations/HF hatası (JSON değilse)
                         if (responseType === 'blob') {
                             const errorText = await response.text();
                             throw new Error(`API Hatası (${response.status}): ${errorText}`);
@@ -1183,17 +1191,13 @@
 
                 } catch (error) {
                     attempt++;
-                    if (error.message === "503" && !isTitleGeneration) { // Başlık için 503'te bekleme
-                        showTypingIndicator("Hugging Face modeli yükleniyor... (Bu 1-2 dk sürebilir)");
-                        await new Promise(resolve => setTimeout(resolve, 10000 * attempt)); // HF için gecikmeyi artır
-                    } else {
-                        console.error(`API Denemesi ${attempt} başarısız:`, error);
-                        if (attempt >= MAX_RETRIES) {
-                             if (!isTitleGeneration) { // Başlık hatasını chat'e basma
-                                 renderSystemMessage(`**HATA:** ${error.message}`, "error");
-                             }
-                            return null; // Null döndür
+                    // GÜNCELLEME: 503 (HF) bekleme mantığı kaldırıldı
+                    console.error(`API Denemesi ${attempt} başarısız:`, error);
+                    if (attempt >= MAX_RETRIES) {
+                        if (!isTitleGeneration) { // Başlık hatasını chat'e basma
+                            renderSystemMessage(`**HATA:** ${error.message}`, "error");
                         }
+                        return null; // Null döndür
                     }
                 }
             }
@@ -1286,15 +1290,15 @@
             chatMode = mode;
             
             if (mode === 'image') {
-                // GÖRSEL MODU (Hugging Face)
-                if(CURRENT_MODE_DISPLAY) CURRENT_MODE_DISPLAY.textContent = "Görsel Modu"; // "HF" kaldırıldı
+                // GÖRSEL MODU (Pollinations)
+                if(CURRENT_MODE_DISPLAY) CURRENT_MODE_DISPLAY.textContent = "Görsel Modu";
                 if(CHAT_INPUT) CHAT_INPUT.placeholder = "Görsel tanımını (prompt) girin...";
                 if(IMAGE_MODE_BTN) IMAGE_MODE_BTN.classList.add('text-green-500'); // Aktif olduğunu göstermek için yeşil yap
-                if(notify) renderSystemMessage("Görsel Modu **AKTİF**. (Sohbet etmek için 'Sohbet Modu'na geçin)"); // "Hugging Face" kaldırıldı
+                if(notify) renderSystemMessage("Görsel Modu **AKTİF**. (Sohbet etmek için 'Sohbet Modu'na geçin)");
                 
             } else {
                 // Sohbet Modu (Gemini)
-                if(CURRENT_MODE_DISPLAY) CURRENT_MODE_DISPLAY.textContent = "Sohbet Modu"; // "Gemini" kaldırıldı
+                if(CURRENT_MODE_DISPLAY) CURRENT_MODE_DISPLAY.textContent = "Sohbet Modu";
                 if(CHAT_INPUT) CHAT_INPUT.placeholder = "N0thingAI'a bir mesaj gönder...";
                 if(IMAGE_MODE_BTN) IMAGE_MODE_BTN.classList.remove('text-green-500'); // Varsa yeşil vurguyu kaldır
                 if(notify) {
@@ -1441,7 +1445,7 @@
             // Not: Artık onSnapshot dinleyicisi UI'ı güncelleyecek.
         }
         
-        // --- GÖRSEL OLUŞTURMA (Hugging Face) ---
+        // --- GÖRSEL OLUŞTURMA (Pollinations) ---
         
         /**
          * Türkçe prompt'u alıp, optimize edilmiş İngilizce prompt'a çevirir (Gemini ile)
@@ -1469,6 +1473,56 @@
             } catch (error) {
                 console.error('Prompt Çeviri/Optimizasyon Hatası:', error);
                 return turkishPrompt; 
+            }
+        }
+        
+        /**
+         * Pollinations kullanarak görsel oluşturur
+         */
+        async function generateImage(userPrompt) {
+            // 1. Türkçe prompt'u optimize et (Gemini ile)
+            const optimizedPrompt = await translateAndOptimizePrompt(userPrompt);
+
+            // 2. Pollinations'a istek at
+            showTypingIndicator(`Görsel oluşturuluyor: "${optimizedPrompt.substring(0, 40)}..."`);
+            
+            // GÜNCELLEME: Pollinations payload'u (fetchWithRetry bunu URL'ye ekler)
+            const payload = { 
+                inputs: optimizedPrompt
+                // Pollinations (URL tabanlı) negatif prompt'u bu yolla desteklemez.
+            };
+
+            let generatedBase64 = null;
+            let aiMessage = "Görsel oluşturma başarısız oldu. Lütfen daha açıklayıcı bir tanım deneyin.";
+
+            try {
+                // GÜNCELLEME: 'pollinations' modelini çağır, API Key (null)
+                const imageBlob = await fetchWithRetry('pollinations', payload, null);
+                
+                if (imageBlob && imageBlob.size > 0) {
+                    // Blob'u Base64'e çevir
+                    generatedBase64 = await new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onloadend = () => resolve(reader.result); // Bu data:image/png... içerir
+                        reader.onerror = reject;
+                        reader.readAsDataURL(imageBlob);
+                    });
+                } else if (imageBlob) { // Hata (null değil) ama blob boş
+                    aiMessage = "API'den görsel alınamadı, ancak hata da dönmedi. Lütfen tekrar deneyin.";
+                    await saveMessage(aiMessage, 'ai');
+                }
+                // (Eğer result null ise, fetchWithRetry zaten sistem mesajı göstermiştir)
+
+            } catch (error) {
+                console.error('Görsel API Çağrısı Hatası:', error);
+                // (fetchWithRetry zaten hatayı gösterdi)
+            } finally {
+                hideTypingIndicator();
+                
+                if (generatedBase64) {
+                    // AI yanıtını görsel (base64) ve prompt metni olarak kaydet
+                    await saveMessage(optimizedPrompt, 'ai', generatedBase64); // Base64 URL olarak kaydet
+                }
             }
         }
         
@@ -1549,58 +1603,6 @@
                 hideTypingIndicator();
                 removeAttachment(); // Mesaj gönderildikten sonra eki temizle
                 await saveMessage(responseText, 'ai'); // AI yanıtını kaydet
-            }
-        }
-        
-        /**
-         * Hugging Face (SDXL) kullanarak görsel oluşturur
-         */
-        async function generateImage(userPrompt) {
-            // 1. Türkçe prompt'u optimize et (Gemini ile)
-            const optimizedPrompt = await translateAndOptimizePrompt(userPrompt);
-
-            // 2. Hugging Face'e istek at
-            showTypingIndicator(`Görsel oluşturuluyor: "${optimizedPrompt.substring(0, 40)}..."`);
-            
-            const payload = { 
-                inputs: optimizedPrompt,
-                // YENİ: Negatif Prompt
-                parameters: {
-                    negative_prompt: "ugly, blurry, deformed, disfigured, poor quality, bad anatomy, low quality, grainy"
-                }
-            };
-
-            let generatedBase64 = null;
-            let aiMessage = "Görsel oluşturma başarısız oldu. Lütfen daha açıklayıcı bir tanım deneyin veya API anahtarınızı kontrol edin.";
-
-            try {
-                // 'huggingface' modelini çağır
-                const imageBlob = await fetchWithRetry('huggingface', payload, HUGGINGFACE_API_KEY);
-                
-                if (imageBlob && imageBlob.size > 0) {
-                    // Blob'u Base64'e çevir
-                    generatedBase64 = await new Promise((resolve, reject) => {
-                        const reader = new FileReader();
-                        reader.onloadend = () => resolve(reader.result); // Bu data:image/png... içerir
-                        reader.onerror = reject;
-                        reader.readAsDataURL(imageBlob);
-                    });
-                } else if (imageBlob) { // Hata (null değil) ama blob boş
-                    aiMessage = "API'den görsel alınamadı, ancak hata da dönmedi. Lütfen tekrar deneyin.";
-                    await saveMessage(aiMessage, 'ai');
-                }
-                // (Eğer result null ise, fetchWithRetry zaten sistem mesajı göstermiştir)
-
-            } catch (error) {
-                console.error('Görsel API Çağrısı Hatası:', error);
-                // (fetchWithRetry zaten hatayı gösterdi)
-            } finally {
-                hideTypingIndicator();
-                
-                if (generatedBase64) {
-                    // AI yanıtını görsel (base64) ve prompt metni olarak kaydet
-                    await saveMessage(optimizedPrompt, 'ai', generatedBase64); // Base64 URL olarak kaydet
-                }
             }
         }
         
@@ -1743,7 +1745,7 @@
             autoResizeTextarea(); // Textarea'yı küçült
 
             if (chatMode === 'image') {
-                // Görsel modu (Hugging Face)
+                // Görsel modu (Pollinations)
                 await generateImage(text);
             } else {
                 // Sohbet modu (Gemini) veya Görsel Analiz (Gemini)
@@ -1918,9 +1920,9 @@
             } else if (error.code === 'auth/invalid-email') {
                 errorMessage = "Geçersiz e-posta adresi formatı.";
             } else if (error.code === 'auth/configuration-not-found') {
-                 errorMessage = "Giriş yöntemi (Email) Firebase'de etkin değil.";
+                errorMessage = "Giriş yöntemi (Email) Firebase'de etkin değil.";
             } else {
-                 errorMessage = error.message;
+                errorMessage = error.message;
             }
 
             if (view === 'login' && AUTH_ERROR_MESSAGE) {
@@ -2109,6 +2111,7 @@
             }
             
             // YENİ: OTURUM KALICILIĞI
+            // (Kullanıcı bu satırı zaten eklemiş, oturum açma sorununu düzeltir)
             await setPersistence(auth, browserLocalPersistence);
             
             onAuthStateChanged(auth, async (user) => {
