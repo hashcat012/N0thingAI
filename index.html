@@ -176,23 +176,57 @@
             overflow-y: auto;
             margin-top: 1rem; /* Geri eklendi */
         }
-        /* Geçmişteki sohbet item'ı */
+        
+        /* GÜNCELLENDİ: Geçmişteki sohbet item'ı */
         .chat-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative; /* Menü butonu için */
             padding: 10px 12px;
             margin-bottom: 8px;
             border-radius: 8px;
             cursor: pointer;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
             font-size: 0.9em;
             transition: background-color 0.2s, color 0.2s;
             color: var(--text-secondary);
+            /* overflow, nowrap, ellipsis buradan kaldırıldı */
         }
+        /* YENİ: Sohbet başlığı (ellipsis için) */
+        .chat-item-title {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex-grow: 1; /* Esnemesi için */
+            padding-right: 10px; /* Butonla arası için */
+        }
+        /* YENİ: 3 Nokta Menü Butonu */
+        .chat-item-menu-btn {
+            display: none; /* Varsayılan olarak gizli */
+            flex-shrink: 0; /* Küçülmesin */
+            padding: 4px 8px;
+            border-radius: 6px;
+            background-color: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            line-height: 1; /* İkonu ortalamak için */
+        }
+        .chat-item:hover .chat-item-menu-btn {
+            display: block; /* Hover'da göster */
+        }
+        .chat-item-menu-btn:hover {
+            background-color: var(--btn-hover);
+            color: var(--text-primary);
+        }
+        
         .chat-item.active {
             background-color: var(--active-chat-bg);
             color: var(--text-primary); /* Aktif metin daha parlak */
-            font-weight: 600;
+        }
+        /* Aktif olanın başlığı da parlak olmalı */
+        .chat-item.active .chat-item-title {
+             font-weight: 600;
         }
         .chat-item:not(.active):hover {
             background-color: var(--btn-hover);
@@ -586,6 +620,18 @@
         .social-btn:hover { background-color: var(--btn-hover); }
         .light-mode .social-btn:hover { background-color: #E0E0E0; }
 
+        /* YENİ: İçerik Menüsü (Popover) */
+        .context-menu-item {
+            transition: background-color 0.2s;
+            cursor: pointer;
+        }
+        .context-menu-item:hover {
+            background-color: var(--btn-hover);
+        }
+        .context-menu-item:first-of-type { border-top-left-radius: 8px; border-top-right-radius: 8px; }
+        .context-menu-item:last-of-type { border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; }
+
+
         /* Responsive Tasarım */
         @media (max-width: 768px) {
             .sidebar {
@@ -959,6 +1005,29 @@
         </div>
     </div>
 
+    <!-- YENİ: Sohbet Geçmişi İçerik Menüsü (Popover) -->
+    <div id="chat-context-menu" class="hidden absolute z-50 w-48 rounded-lg shadow-xl" style="background-color: var(--modal-bg); border: 1px solid var(--input-border);">
+        <button id="rename-chat-btn" class="context-menu-item w-full text-left px-4 py-2 text-sm flex items-center">
+            <i class="fas fa-pencil-alt w-4 mr-2 opacity-70"></i> Yeniden Adlandır
+        </button>
+        <button id="delete-chat-btn" class="context-menu-item w-full text-left px-4 py-2 text-sm text-red-500 flex items-center">
+            <i class="fas fa-trash-alt w-4 mr-2 opacity-70"></i> Sohbeti Sil
+        </button>
+    </div>
+
+    <!-- YENİ: Sohbet Silme Onay Modalı -->
+    <div id="delete-confirm-modal" class="modal hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center modal-overlay">
+        <div class="p-6 rounded-xl shadow-2xl w-full max-w-sm modal-content relative">
+            <h2 class="text-lg font-bold mb-4">Sohbeti Sil</h2>
+            <p class="text-sm mb-6" style="color: var(--text-secondary);">
+                Bu sohbeti kalıcı olarak silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
+            </p>
+            <div class="flex justify-end gap-4">
+                <button id="cancel-delete-btn" class="py-2 px-4 rounded-lg font-semibold border" style="border-color: var(--btn-border); transition: background-color 0.2s;">İptal</button>
+                <button id="confirm-delete-btn" class="py-2 px-4 rounded-lg font-semibold bg-red-600 text-white transition-colors hover:bg-red-700">Sil</button>
+            </div>
+        </div>
+    </div>
     
     <script type="module">
         // Firebase ve Google API Entegrasyonu
@@ -976,7 +1045,8 @@
         import { 
             getFirestore, doc, setDoc, addDoc, collection, onSnapshot, 
             query, orderBy, serverTimestamp, getDoc,
-            Timestamp, updateDoc, getDocs // <<< HATA DÜZELTMESİ: getDocs EKLENDİ
+            Timestamp, updateDoc, getDocs,
+            deleteDoc // <<< YENİ: deleteDoc EKLENDİ
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- HİBRİT API Keys ve Modeller ---
@@ -1090,6 +1160,16 @@
         // YENİ: Token Göstergesi
         const TOKEN_DISPLAY = document.getElementById('token-display');
         const TOKEN_COUNT = document.getElementById('token-count');
+        
+        // YENİ: Sohbet Geçmişi Menüsü
+        const CHAT_CONTEXT_MENU = document.getElementById('chat-context-menu');
+        const RENAME_CHAT_BTN = document.getElementById('rename-chat-btn');
+        const DELETE_CHAT_BTN = document.getElementById('delete-chat-btn');
+        
+        // YENİ: Silme Onay Modalı
+        const DELETE_CONFIRM_MODAL = document.getElementById('delete-confirm-modal');
+        const CONFIRM_DELETE_BTN = document.getElementById('confirm-delete-btn');
+        const CANCEL_DELETE_BTN = document.getElementById('cancel-delete-btn');
 
 
         // --- YENİ: KOTA LİMİTLERİ (TOKEN) ---
@@ -1118,6 +1198,7 @@
         let currentChatId = null; // Aktif sohbetin Firestore ID'si
         let unsubscribeChat = null; // Aktif sohbet dinleyicisini
         let unsubscribeHistory = null; // Sohbet listesi dinleyicisini
+        let contextChatId = null; // YENİ: Menünün hangi sohbet için açıldığını tutar
         
         // YENİ: KOTA DURUMU (TOKEN)
         let currentUserRole = 'anonymous'; // 'anonymous', 'normal', 'plus', 'premium', 'admin'
@@ -2049,6 +2130,7 @@
         
         /**
          * Kullanıcının sohbet listesini dinler (Sidebar için)
+         * GÜNCELLENDİ: 3 Nokta Menüsü Eklendi
          */
         function listenToChatHistory(userId) {
             if (!db) return;
@@ -2071,28 +2153,175 @@
                     if (chatId === '--profile--') return; 
 
                     const li = document.createElement('li');
-                    li.className = 'chat-item'; // CSS değişkenlerini kullanan stil
-                    li.textContent = chat.title || "Yeni Sohbet";
+                    li.className = 'chat-item';
                     li.dataset.chatId = chatId; // ID'yi sakla
                     
-                    if (chatId === currentChatId) {
-                        li.classList.add('active'); // Aktif stili uygula
-                    }
-
-                    li.onclick = () => {
+                    // Başlık Span'i
+                    const titleSpan = document.createElement('span');
+                    titleSpan.className = 'chat-item-title';
+                    titleSpan.textContent = chat.title || "Yeni Sohbet";
+                    titleSpan.onclick = () => {
                         // Aktif stili ayarla
-                        document.querySelectorAll('#chat-history-list .chat-item').forEach(item => {
+                        document.querySelectorAll('#chat-history-list .chat-item.active').forEach(item => {
                             item.classList.remove('active');
                         });
                         li.classList.add('active');
                         
                         listenToChat(userId, chatId);
                     };
+                    
+                    // 3 Nokta Menü Butonu
+                    const menuBtn = document.createElement('button');
+                    menuBtn.className = 'chat-item-menu-btn';
+                    menuBtn.innerHTML = '<i class="fas fa-ellipsis-h"></i>';
+                    menuBtn.title = "Seçenekler";
+                    menuBtn.onclick = (e) => {
+                        e.stopPropagation(); // li'nin tıklanmasını engelle
+                        openChatContextMenu(e, chatId);
+                    };
+
+                    li.appendChild(titleSpan);
+                    li.appendChild(menuBtn);
+                    
+                    if (chatId === currentChatId) {
+                        li.classList.add('active'); // Aktif stili uygula
+                    }
+
                     CHAT_HISTORY_LIST.appendChild(li);
                 });
             }, (error) => {
                 console.error("Geçmiş listesi dinlenirken hata:", error);
             });
+        }
+        
+        // --- YENİ: Sohbet Geçmişi Menü Fonksiyonları ---
+
+        /**
+         * 3 Nokta menüsünü açar
+         */
+        function openChatContextMenu(event, chatId) {
+            contextChatId = chatId; // Hangi sohbete tıklandığını sakla
+            CHAT_CONTEXT_MENU.classList.remove('hidden');
+            
+            // Menüyü tıklanan yere göre konumlandır
+            // Ekranın altından taşmasını engelle
+            const menuHeight = CHAT_CONTEXT_MENU.offsetHeight;
+            const y = (event.clientY + menuHeight > window.innerHeight) 
+                ? window.innerHeight - menuHeight - 10 // Alttan taşarsa
+                : event.clientY; // Normal konum
+                
+            CHAT_CONTEXT_MENU.style.top = `${y}px`;
+            CHAT_CONTEXT_MENU.style.left = `${event.clientX - (CHAT_CONTEXT_MENU.offsetWidth / 2)}px`;
+        }
+
+        /**
+         * 3 Nokta menüsünü kapatır
+         */
+        function closeChatContextMenu() {
+            if (CHAT_CONTEXT_MENU) {
+                CHAT_CONTEXT_MENU.classList.add('hidden');
+            }
+            contextChatId = null;
+        }
+
+        /**
+         * Sohbeti yeniden adlandırır (prompt ile)
+         */
+        async function renameChat() {
+            const chatId = contextChatId;
+            closeChatContextMenu(); // Menüyü hemen kapat
+            if (!chatId || !currentUserId) return;
+
+            // Not: prompt(), alert() ve confirm() normalde iframe'lerde kısıtlıdır,
+            // ancak bu ortamda çalıştığını varsayarak kullanıyoruz.
+            // Çalışmazsa, buranın özel bir modal ile değiştirilmesi gerekir.
+            const currentTitle = document.querySelector(`.chat-item[data-chat-id="${chatId}"] .chat-item-title`)?.textContent || "";
+            const newTitle = prompt("Sohbet için yeni bir başlık girin:", currentTitle);
+
+            if (newTitle && newTitle.trim() !== "" && newTitle.trim() !== currentTitle) {
+                try {
+                    const chatRef = doc(db, "users", currentUserId, "chats", chatId);
+                    await updateDoc(chatRef, {
+                        title: newTitle.trim().substring(0, 30) // 30 kr sınırla
+                    });
+                    // onSnapshot güncellemeyi UI'a yansıtacaktır
+                } catch (e) {
+                    console.error("Sohbet yeniden adlandırılamadı:", e);
+                    renderSystemMessage("Hata: Sohbet yeniden adlandırılamadı.", "error");
+                }
+            }
+        }
+
+        /**
+         * Silme onay modalını açar
+         */
+        function openDeleteModal() {
+            // contextChatId zaten dolu olmalı
+            closeChatContextMenu(); // Menüyü kapat
+            if (!contextChatId) return;
+            DELETE_CONFIRM_MODAL.classList.remove('hidden');
+        }
+
+        /**
+         * Silme onay modalını kapatır
+         */
+        function closeDeleteModal() {
+            DELETE_CONFIRM_MODAL.classList.add('hidden');
+            contextChatId = null; // İşlem iptal edildi, ID'yi temizle
+        }
+
+        /**
+         * Sohbeti ve alt mesajlarını Firestore'dan siler
+         */
+        async function confirmDeleteChat() {
+            const chatId = contextChatId;
+            if (!chatId || !currentUserId) return;
+
+            console.log(`Sohbet siliniyor: ${chatId}`);
+            try {
+                // 1. Önce alt koleksiyonu (messages) sil
+                await deleteChatSubcollection(currentUserId, chatId);
+                
+                // 2. Ana sohbet dökümanını sil
+                const chatRef = doc(db, "users", currentUserId, "chats", chatId);
+                await deleteDoc(chatRef);
+
+                console.log("Sohbet başarıyla silindi.");
+
+                // 3. Eğer silinen sohbet, şu an açık olan sohbet ise, yeni sohbete geç
+                if (currentChatId === chatId) {
+                    await startNewChat();
+                }
+                
+                // onSnapshot, sohbet listesini otomatik güncelleyecektir.
+                
+            } catch (e) {
+                console.error("Sohbet silinirken hata:", e);
+                renderSystemMessage("Hata: Sohbet silinirken bir sorun oluştu.", "error");
+            } finally {
+                closeDeleteModal(); // Modalı kapat
+            }
+        }
+
+        /**
+         * Bir sohbetin 'messages' alt koleksiyonundaki tüm dökümanları siler
+         */
+        async function deleteChatSubcollection(userId, chatId) {
+            const messagesRef = collection(db, "users", userId, "chats", chatId, "messages");
+            const snapshot = await getDocs(messagesRef);
+            
+            if (snapshot.empty) {
+                console.log("Alt koleksiyon (messages) zaten boş.");
+                return; // Silinecek bir şey yok
+            }
+
+            const deletePromises = [];
+            snapshot.forEach(doc => {
+                deletePromises.push(deleteDoc(doc.ref));
+            });
+            
+            await Promise.all(deletePromises);
+            console.log(`${deletePromises.length} mesaj silindi.`);
         }
 
 
@@ -2427,6 +2656,26 @@
                 });
                 SCROLL_TO_BOTTOM_BTN.addEventListener('click', autoScroll);
             }
+            
+            // YENİ: Sohbet Geçmişi Menü Olayları
+            RENAME_CHAT_BTN.addEventListener('click', renameChat);
+            DELETE_CHAT_BTN.addEventListener('click', openDeleteModal);
+            CANCEL_DELETE_BTN.addEventListener('click', closeDeleteModal);
+            CONFIRM_DELETE_BTN.addEventListener('click', confirmDeleteChat);
+            
+            // Menünün içindeyken kapanmasını engelle
+            CHAT_CONTEXT_MENU.addEventListener('click', (e) => e.stopPropagation());
+            
+            // Dışarı tıklayınca menüyü ve silme modalını kapat
+            document.addEventListener('click', () => {
+                closeChatContextMenu();
+                // Not: Silme modalı sadece butonlarla kapanmalı, dışarı tıklayarak değil.
+                // İstenirse eklenebilir:
+                // if (!DELETE_CONFIRM_MODAL.classList.contains('hidden')) {
+                //     closeDeleteModal();
+                // }
+            });
+
 
             // --- Uygulamayı Başlat ---
             
