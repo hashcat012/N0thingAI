@@ -401,9 +401,36 @@
              font-size: 0.8rem;
         }
 
+        /* YENİDEN EKLENDİ: Profil Görünümü (Oturum Açık) */
+        #user-profile-view {
+            transition: background-color 0.2s;
+        }
+        #user-profile-view:hover {
+            background-color: var(--active-chat-bg);
+        }
+        #profile-pic {
+            background-color: var(--highlight-color);
+            color: var(--sidebar-bg); /* Harf rengi */
+        }
+        .light-mode #profile-pic {
+             color: #FFFFFF; /* Açık temada harf beyaz */
+        }
+        #profile-pic img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        /* YENİ: Katlanmış Profil metni */
+        #user-profile-view .truncate {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: opacity 0.2s;
+        }
+
+
         /* Giriş Yap Butonu (Oturum Kapalı) */
         #login-btn {
-            /* GÜNCELLENDİ: Plus butonundan (#9E9E9E) çok az daha parlak yapıldı */
             background-color: #AEAEAE; /* Temanın Vurgu Renginden parlak */
             color: #fff; /* Varsayılan (light-mode için) */
             font-weight: 700;
@@ -425,11 +452,9 @@
         }
 
         .dark-mode #login-btn {
-            /* GÜNCELLENDİ: Yazı rengi SİYAH olarak ayarlandı */
             color: var(--sidebar-bg); /* Siyah/Koyu Gri Yazı */
         }
         .light-mode #login-btn {
-            /* GÜNCELLENDİ: Yazı rengi SİYAH olarak ayarlandı */
             color: var(--sidebar-bg);
         }
         #login-btn:hover {
@@ -454,7 +479,7 @@
         }
         /* Katlanmış Login Butonu */
         .sidebar.collapsed #login-btn {
-            width: 44px; /* DÜZELTME: Boyut */
+            width: 44px;
             height: 44px;
             padding: 0;
             justify-content: center;
@@ -466,7 +491,23 @@
             margin-right: 0;
         }
 
-        /* DÜZELTME: Katlanmış Artı Butonu Stili */
+        /* YENİDEN EKLENDİ: Katlanmış Profil Görünümü */
+        .sidebar.collapsed #user-profile-view {
+            justify-content: center; /* Sadece profil resmini ortala */
+            padding: 0; /* Padding'i sıfırla */
+        }
+        .sidebar.collapsed #user-name,
+        .sidebar.collapsed #user-profile-view .fa-cog {
+            display: none; /* Metni ve ikonu gizle */
+        }
+        .sidebar.collapsed #profile-pic {
+            width: 44px; /* Butonlarla aynı boyuta getir */
+            height: 44px;
+            font-size: 1.2rem; /* Harfi büyüt */
+        }
+
+
+        /* Katlanmış Artı Butonu Stili */
         .sidebar.collapsed .new-chat-btn {
             width: 44px;
             height: 44px; 
@@ -911,9 +952,19 @@
             <footer class="sidebar-footer">
                 <div id="auth-container" class="w-full">
                     
-                    <!-- GÜNCELLENDİ: user-profile-view div'i TAMAMEN SİLİNDİ -->
+                    <!-- YENİDEN EKLENDİ: Oturum Açıkken (Giriş yapıldıktan sonra görünür) -->
+                    <div id="user-profile-view" class="hidden flex items-center justify-between cursor-pointer p-2 rounded-lg" onclick="window.openSettingsModal()">
+                        <div class="flex items-center space-x-3 min-w-0">
+                            <!-- YENİDEN EKLENDİ: Profil Resmi -->
+                            <span id="profile-pic" class="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center font-bold text-sm"></span>
+                            <!-- YENİDEN EKLENDİ: Kullanıcı Adı -->
+                            <span id="user-name" class="text-sm font-semibold truncate"></span>
+                        </div>
+                        <!-- YENİDEN EKLENDİ: Ayarlar İkonu -->
+                        <i class="fas fa-cog text-lg opacity-70"></i>
+                    </div>
                     
-                    <!-- GÜNCELLENDİ: Bu buton artık hem giriş hem ayarlar için kullanılacak -->
+                    <!-- Oturum Kapalıyken (Varsayılan görünüm) -->
                     <div id="login-view" class="">
                         <!-- GÜNCELLENDİ: İkon eklendi, metin span içine alındı -->
                         <button id="login-btn" class="w-full py-3 login-btn rounded-xl font-semibold" onclick="window.openSettingsModal()">
@@ -1230,6 +1281,10 @@
         
         // Auth/Modal Elements
         const AUTH_CONTAINER = document.getElementById('auth-container');
+        // YENİDEN EKLENDİ: Profil View elementleri
+        const USER_PROFILE_VIEW = document.getElementById('user-profile-view');
+        const PROFILE_PIC = document.getElementById('profile-pic');
+        const USER_NAME = document.getElementById('user-name');
         const LOGIN_VIEW = document.getElementById('login-view'); 
         
         const SETTINGS_MODAL = document.getElementById('settings-modal');
@@ -2234,10 +2289,11 @@
             
             await setPersistence(auth, browserLocalPersistence);
             
+            // DÜZELTME: Artık login-btn'i değil, view'ları yönetiyoruz
             // Buton içeriğini değiştirmek için referanslar
-            const loginBtn = document.getElementById('login-btn');
-            const loginBtnIcon = loginBtn.querySelector('i');
-            const loginBtnText = loginBtn.querySelector('.btn-text');
+            // const loginBtn = document.getElementById('login-btn'); // Bu artık kullanılmıyor
+            // const loginBtnIcon = loginBtn.querySelector('i');
+            // const loginBtnText = loginBtn.querySelector('.btn-text');
 
             onAuthStateChanged(auth, async (user) => {
                 
@@ -2256,9 +2312,10 @@
                     if (user.isAnonymous) {
                         // --- ANONİM KULLANICI ---
                         currentUserRole = 'anonymous';
+                        
+                        // DÜZELTME: View'ları değiştir
                         if(LOGIN_VIEW) LOGIN_VIEW.classList.remove('hidden'); 
-                        if(loginBtnIcon) loginBtnIcon.className = 'fas fa-sign-in-alt';
-                        if(loginBtnText) loginBtnText.textContent = ' Giriş Yap / Kayıt Ol';
+                        if(USER_PROFILE_VIEW) USER_PROFILE_VIEW.classList.add('hidden'); // Profili gizle
                         
                         if (PLUS_BTN) PLUS_BTN.classList.remove('hidden');
                         
@@ -2282,9 +2339,15 @@
 
                     } else {
                         // --- GİRİŞ YAPMIŞ KULLANICI ---
-                        if(LOGIN_VIEW) LOGIN_VIEW.classList.remove('hidden');
-                        if(loginBtnIcon) loginBtnIcon.className = 'fas fa-cog'; // İkonu değiştir
-                        if(loginBtnText) loginBtnText.textContent = user.email || 'Ayarlar'; // E-postayı yaz
+                        
+                        // DÜZELTME: View'ları değiştir
+                        if(LOGIN_VIEW) LOGIN_VIEW.classList.add('hidden'); // Giriş butonunu gizle
+                        if(USER_PROFILE_VIEW) USER_PROFILE_VIEW.classList.remove('hidden'); // Profili göster
+
+                        // YENİ: Profil içeriğini doldur
+                        if (USER_NAME) USER_NAME.textContent = user.email || "Kullanıcı";
+                        if (PROFILE_PIC) PROFILE_PIC.textContent = (user.email || "K")[0].toUpperCase();
+
 
                         let role = 'normal';
                         let currentTokens = 0;
@@ -2338,9 +2401,9 @@
                     currentUserId = null;
                     currentUserRole = 'anonymous';
                     
+                    // DÜZELTME: View'ları değiştir
                     if(LOGIN_VIEW) LOGIN_VIEW.classList.remove('hidden');
-                    if(loginBtnIcon) loginBtnIcon.className = 'fas fa-sign-in-alt';
-                    if(loginBtnText) loginBtnText.textContent = ' Giriş Yap / Kayıt Ol';
+                    if(USER_PROFILE_VIEW) USER_PROFILE_VIEW.classList.add('hidden');
 
                     if (TOKEN_DISPLAY) TOKEN_DISPLAY.style.display = 'none';
                     if (PLUS_BTN) PLUS_BTN.classList.remove('hidden');
