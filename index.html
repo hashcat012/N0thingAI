@@ -380,16 +380,13 @@
             background-color: var(--highlight-color);
             color: #fff; 
             font-weight: 700;
-            transition: background-color 0.2s, opacity 0.3s ease-in-out;
+            /* DÜZELTME: transition'a 'left' ve 'transform' eklendi */
+            transition: background-color 0.2s, opacity 0.3s ease-in-out, left 0.3s ease-in-out, transform 0.3s ease-in-out;
             border-radius: 8px;
             font-size: 0.85rem;
             cursor: pointer;
         }
-        /* YENİ: Plus butonu sidebar katlanınca gizlensin */
-        .sidebar.collapsed ~ .chat-area #plus-btn {
-            opacity: 0;
-            pointer-events: none;
-        }
+        /* DÜZELTME: Plus butonu sidebar katlanınca gizlenmesin (kural kaldırıldı) */
 
         .dark-mode #plus-btn { color: #1A1A1A; }
         .light-mode #plus-btn { color: #FFFFFF; }
@@ -542,13 +539,10 @@
             font-weight: 700;
             border-radius: 8px;
             font-size: 0.85rem;
-            transition: opacity 0.3s ease-in-out;
+            /* DÜZELTME: transition eklendi */
+            transition: opacity 0.3s ease-in-out, right 0.3s ease-in-out;
         }
-        /* YENİ: Token göstergesi sidebar katlanınca gizlensin */
-        .sidebar.collapsed ~ .chat-area #token-display {
-            opacity: 0;
-            pointer-events: none;
-        }
+        /* DÜZELTME: Token göstergesi sidebar katlanınca gizlenmesin (kural kaldırıldı) */
 
         #token-symbol {
             width: 16px;
@@ -901,12 +895,8 @@
             }
             .message-row { max-width: 95%; }
             
-            /* YENİ: Mobilde katlanmış sidebar'ın gizlediği butonları geri getir */
-            .sidebar.collapsed ~ .chat-area #plus-btn,
-            .sidebar.collapsed ~ .chat-area #token-display {
-                opacity: 1;
-                pointer-events: auto;
-            }
+            /* YENİ: Mobilde katlanmış sidebar'ın gizlediği butonları geri getir (gerek kalmadı) */
+
             #token-display {
                 top: 15px;
                 right: 15px;
@@ -931,6 +921,12 @@
             .mobile-overlay {
                 display: none;
             }
+
+            /* YENİ: Masaüstü Katlanmış Header Stilleri */
+            .sidebar.collapsed + .chat-area #collapsed-logo-text {
+                display: block; /* Sadece masaüstü + katlanmışken göster */
+            }
+            /* DÜZELTME: Plus butonunun yerini değiştiren kural kaldırıldı */
         }
     </style>
 </head>
@@ -1009,6 +1005,12 @@
                 <i class="fas fa-bars"></i>
             </button>
             
+            <!-- YENİ: Sadece katlanmış-masaüstü modunda görünecek başlık -->
+            <span id="collapsed-logo-text" class="hidden md:hidden text-lg font-bold" 
+                  style="position: absolute; top: 15px; left: 20px; z-index: 20; color: var(--text-primary); white-space: nowrap;">
+                N0thingAI
+            </span>
+
             <!-- GÜNCELLENDİ: Plus butonu (Daha basit) -->
             <button id="plus-btn" class="">
                 <i class="fas fa-star"></i> Plus
