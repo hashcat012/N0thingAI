@@ -72,10 +72,10 @@
             color: var(--text-primary);
             transition: background-color 0.3s, color 0.3s;
         }
-        .app-container { 
-            display: flex; 
-            height: 100vh; 
-            overflow: hidden; 
+        .app-container {  
+            display: flex;  
+            height: 100vh;  
+            overflow: hidden;  
             transition: padding-left 0.3s ease-in-out;
         }
 
@@ -88,7 +88,7 @@
             padding: 16px;
             border-right: 1px solid var(--input-border);
             transition: width 0.3s ease-in-out, padding 0.3s ease-in-out;
-            overflow: visible; 
+            overflow: visible;  
             position: fixed;
             height: 100%;
             z-index: 40;
@@ -99,10 +99,10 @@
         }
 
         .chat-area {
-            flex-grow: 1; 
-            display: flex; 
-            flex-direction: column; 
-            position: relative; 
+            flex-grow: 1;  
+            display: flex;  
+            flex-direction: column;  
+            position: relative;  
             background-color: var(--bg-primary);
             margin-left: 280px;
             transition: margin-left 0.3s ease-in-out;
@@ -130,7 +130,7 @@
         .logo-svg {
             width: 32px;
             height: 32px;
-            background-color: var(--highlight-color); 
+            background-color: var(--highlight-color);  
             border-radius: 8px;
             display: flex;
             align-items: center;
@@ -213,7 +213,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 44px; 
+            height: 44px;  
             margin-bottom: 16px;
             border-radius: 8px;
             border: 1px solid var(--btn-border);
@@ -249,7 +249,7 @@
             flex-shrink: 0;
         }
         .new-chat-btn {
-            padding: 8px 16px; 
+            padding: 8px 16px;  
             background-color: transparent;
             border: 1px solid var(--btn-border);
             color: var(--text-primary);
@@ -261,13 +261,13 @@
             justify-content: center;
             font-weight: 500;
             flex-shrink: 0;
-            width: 100%; 
+            width: 100%;  
             transition: width 0.3s ease-in-out, height 0.3s ease-in-out, padding 0.3s ease-in-out, flex-grow 0.3s ease-in-out;
             flex-grow: 1;
         }
         .new-chat-btn:hover { background-color: var(--btn-hover); }
-        .new-chat-btn i { 
-            margin-right: 8px; 
+        .new-chat-btn i {  
+            margin-right: 8px;  
             transition: margin 0.3s ease-in-out;
         }
         .new-chat-btn .btn-text {
@@ -275,12 +275,12 @@
             transition: opacity 0.2s;
         }
         #temp-chat-btn {
-            flex-grow: 0; 
-            flex-shrink: 0; 
+            flex-grow: 0;  
+            flex-shrink: 0;  
             padding: 8px 12px;
         }
         #temp-chat-btn i {
-            margin-right: 0; 
+            margin-right: 0;  
         }
         #header-temp-chat-btn {
              flex-grow: 0;
@@ -333,7 +333,7 @@
             z-index: 5;
         }
         .chat-item:hover .chat-item-menu-btn {
-            display: block; 
+            display: block;  
         }
         .chat-item-menu-btn:hover {
             background-color: var(--btn-hover);
@@ -358,7 +358,7 @@
         }
         
         #current-mode-display {
-            display: none; 
+            display: none;  
             border-color: var(--highlight-color);
             color: var(--highlight-color);
             background-color: color-mix(in srgb, var(--highlight-color) 10%, transparent);
@@ -376,8 +376,8 @@
             margin-top: auto;
             flex-shrink: 0;
         }
-        #auth-container { 
-            transition: all 0.3s; 
+        #auth-container {  
+            transition: all 0.3s;  
             overflow: hidden;
         }
         
@@ -393,7 +393,7 @@
             gap: 6px;
             padding: 6px 10px;
             background-color: var(--highlight-color);
-            color: #fff; 
+            color: #fff;  
             font-weight: 700;
             transition: background-color 0.2s, opacity 0.3s ease-in-out, left 0.3s ease-in-out, transform 0.3s ease-in-out;
             border-radius: 8px;
@@ -444,7 +444,7 @@
             color: #fff;
             font-weight: 700;
             transition: background-color 0.2s, width 0.3s ease-in-out, height 0.3s ease-in-out, padding 0.3s ease-in-out;
-            display: flex; 
+            display: flex;  
             align-items: center;
             justify-content: center;
             width: 100%;
@@ -520,7 +520,7 @@
         }
         .sidebar.collapsed .new-chat-btn {
             width: 44px;
-            height: 44px; 
+            height: 44px;  
             padding: 0;
             justify-content: center;
             flex-grow: 0;
@@ -579,14 +579,14 @@
             overflow-y: auto;
             flex-grow: 1;
             scroll-behavior: smooth;
-            padding-top: 70px; 
+            padding-top: 70px;  
             padding-bottom: 120px;
         }
 
         #scroll-to-bottom-btn {
             display: none;
             position: absolute;
-            bottom: 130px; 
+            bottom: 130px;  
             right: 30px;
             z-index: 20;
             background-color: var(--input-bg);
@@ -625,7 +625,7 @@
 
         .chat-bubble.user {
             background-color: var(--user-message-bg);
-            color: var(--text-primary); 
+            color: var(--text-primary);  
             border-top-right-radius: 5px;
             margin-left: auto;
         }
@@ -636,10 +636,10 @@
              color: var(--text-primary);
         }
         
-        .system-message-row { 
+        .system-message-row {  
             display: flex;
-            justify-content: center; 
-            max-width: 100%; 
+            justify-content: center;  
+            max-width: 100%;  
             margin-bottom: 24px;
         }
         .system-message-row .message-content {
@@ -860,7 +860,7 @@
         }
 
         .ai-typing-indicator {
-            display: none; 
+            display: none;  
             align-items: center;
             height: 20px;
             margin: 5px 0 15px 0;
@@ -922,83 +922,83 @@
         /* Responsive Tasarım */
         @media (max-width: 768px) {
             .sidebar {
-                left: -280px;
-                transition: left 0.3s ease-in-out;
+                 left: -280px;
+                 transition: left 0.3s ease-in-out;
             }
             .sidebar.open {
-                left: 0;
+                 left: 0;
             }
             .chat-area {
-                margin-left: 0;
-                width: 100%;
+                 margin-left: 0;
+                 width: 100%;
             }
             .sidebar.collapsed + .chat-area {
-                margin-left: 0;
-                width: 100%;
+                 margin-left: 0;
+                 width: 100%;
             }
             
             .toggle-sidebar-btn {
-                display: none;
+                 display: none;
             }
 
             .hamburger-btn {
-                display: block; 
-                position: absolute;
-                top: 15px;
-                left: 15px;
-                z-index: 30;
-                background-color: var(--input-bg);
-                border: 1px solid var(--input-border);
-                border-radius: 8px;
-                padding: 8px 10px;
-                box-shadow: 0 4px 10px var(--shadow-color);
+                 display: block;  
+                 position: absolute;
+                 top: 15px;
+                 left: 15px;
+                 z-index: 30;
+                 background-color: var(--input-bg);
+                 border: 1px solid var(--input-border);
+                 border-radius: 8px;
+                 padding: 8px 10px;
+                 box-shadow: 0 4px 10px var(--shadow-color);
             }
             .mobile-overlay {
-                position: absolute;
-                inset: 0;
-                background-color: rgba(0,0,0,0.5);
-                z-index: 39;
-                display: none;
+                 position: absolute;
+                 inset: 0;
+                 background-color: rgba(0,0,0,0.5);
+                 z-index: 39;
+                 display: none;
             }
             .sidebar.open ~ .chat-area .mobile-overlay {
-                display: block;
+                 display: block;
             }
 
             .input-area-wrapper { padding: 12px; }
             .input-area { padding: 6px 8px; }
             .messages-container {
-                padding: 10px;
-                padding-top: 70px;
-                padding-bottom: 100px;
+                 padding: 10px;
+                 padding-top: 70px;
+                 padding-bottom: 100px;
             }
             .chat-bubble { max-width: 95%; }
 
             #token-display {
-                top: 15px;
-                right: 15px;
-                left: auto;
+                 top: 15px;
+                 right: 15px;
+                 left: auto;
             }
             #scroll-to-bottom-btn {
-                bottom: 110px;
-                right: 15px;
+                 bottom: 110px;
+                 right: 15px;
             }
             #plus-btn {
-                top: 15px;
-                left: 50%;
-                transform: translateX(-50%);
-                right: auto;
+                 top: 15px;
+                 left: 50%;
+                 transform: translateX(-50%);
+                 right: auto;
             }
         }
         @media (min-width: 769px) {
             .hamburger-btn {
-                display: none;
+                 display: none;
             }
             .mobile-overlay {
-                display: none;
+                 display: none;
             }
 
             .sidebar.collapsed + .chat-area #collapsed-logo-text {
-                display: block;
+                 display: block;
             }
         }
     </style>
@@ -1170,7 +1170,25 @@
                     <button id="email-signin-btn" class="w-full py-3 login-btn rounded-xl font-semibold" style="background-color: var(--highlight-color); color: var(--sidebar-bg);">
                         Email ile Giriş Yap
                     </button>
-                    <p class="text-xs text-center" style="color: var(--text-secondary);">
+
+                    <!-- YENİ: VEYA BÖLÜCÜ -->
+                    <div class="flex items-center my-4">
+                        <div class="flex-grow border-t" style="border-color: var(--btn-border);"></div>
+                        <span class="mx-4 text-xs font-semibold" style="color: var(--text-secondary);">VEYA</span>
+                        <div class="flex-grow border-t" style="border-color: var(--btn-border);"></div>
+                    </div>
+
+                    <!-- YENİ: SOSYAL GİRİŞ BUTONLARI -->
+                    <div class="space-y-3">
+                        <button id="google-signin-btn" class="w-full py-3 rounded-xl font-semibold social-btn flex items-center justify-center gap-3">
+                            <i class="fab fa-google text-lg"></i> Google ile Devam Et
+                        </button>
+                        <button id="apple-signin-btn" class="w-full py-3 rounded-xl font-semibold social-btn flex items-center justify-center gap-3">
+                            <i class="fab fa-apple text-lg"></i> Apple ile Devam Et
+                        </button>
+                    </div>
+
+                    <p class="text-xs text-center mt-4" style="color: var(--text-secondary);"> <!-- mt-4 eklendi -->
                         Hesabınız yok mu? 
                         <button id="show-signup-btn" class="font-bold underline hover:opacity-100" style="color: var(--text-primary);">Yeni Hesap Oluşturun</button>
                     </p>
@@ -1215,22 +1233,22 @@
                  <h2 class="text-xl font-bold mb-6" id="modal-title-settings">Ayarlar</h2>
                  
                  <div class="mb-4">
-                      <label for="language-selector" class="block text-sm font-medium mb-2" style="color: var(--text-secondary);">Dil Seçimi</label>
-                      <select id="language-selector" class="w-full p-3 rounded-lg border">
-                          <option value="tr">Türkçe</option> 
-                          <option value="en">English</option>
-                      </select>
+                     <label for="language-selector" class="block text-sm font-medium mb-2" style="color: var(--text-secondary);">Dil Seçimi</label>
+                     <select id="language-selector" class="w-full p-3 rounded-lg border">
+                         <option value="tr">Türkçe</option> 
+                         <option value="en">English</option>
+                     </select>
                  </div>
                  
                  <div class="mb-4">
-                      <label for="theme-selector" class="block text-sm font-medium mb-2" style="color: var(--text-secondary);">Tema Seçimi</label>
-                      <select id="theme-selector" class="w-full p-3 rounded-lg border">
-                          <option value="dark-mode">Koyu Tema (Gri/Beyaz)</option> 
-                          <option value="light-mode">Açık Tema (Beyaz/Gri)</option>
-                      </select>
+                     <label for="theme-selector" class="block text-sm font-medium mb-2" style="color: var(--text-secondary);">Tema Seçimi</label>
+                     <select id="theme-selector" class="w-full p-3 rounded-lg border">
+                         <option value="dark-mode">Koyu Tema (Gri/Beyaz)</option> 
+                         <option value="light-mode">Açık Tema (Beyaz/Gri)</option>
+                     </select>
                  </div>
                  <button id="signout-btn" class="w-full p-3 mt-4 rounded-lg font-semibold border" style="border-color: var(--btn-border); transition: background-color 0.2s;">
-                    <i class="fas fa-sign-out-alt mr-2"></i> Çıkış Yap
+                     <i class="fas fa-sign-out-alt mr-2"></i> Çıkış Yap
                  </button>
             </div>
             
@@ -1374,7 +1392,8 @@
             signInWithEmailAndPassword,
             setPersistence, browserLocalPersistence,
             sendEmailVerification,
-            sendPasswordResetEmail
+            sendPasswordResetEmail,
+            GoogleAuthProvider, OAuthProvider, signInWithPopup // YENİ EKLENDİ
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { 
             getFirestore, doc, setDoc, addDoc, collection, onSnapshot, 
@@ -1391,12 +1410,12 @@
         const IMAGE_GEN_MODEL = "https://image.pollinations.ai/prompt/";
         
         const firebaseConfig = {
-          apiKey: "AIzaSyAUM0DoLRAUoXsAxbcJOrerJIb_vT0GhS4",
-          authDomain: "n0thingai-e8f3c.firebaseapp.com",
-          projectId: "n0thingai-e8f3c",
-          storageBucket: "n0thingai-e8f3c.firebasestorage.app",
-          messagingSenderId: "266636496490",
-          appId: "1:266636496490:web:b5250f6ba01a66bf860413"
+         apiKey: "AIzaSyAUM0DoLRAUoXsAxbcJOrerJIb_vT0GhS4",
+         authDomain: "n0thingai-e8f3c.firebaseapp.com",
+         projectId: "n0thingai-e8f3c",
+         storageBucket: "n0thingai-e8f3c.firebasestorage.app",
+         messagingSenderId: "266636496490",
+         appId: "1:266636496490:web:b5250f6ba01a66bf860413"
         };
         
         let app, auth, db;
@@ -1440,7 +1459,7 @@
         const USER_PROFILE_VIEW = document.getElementById('user-profile-view');
         const PROFILE_PIC = document.getElementById('profile-pic');
         const USER_NAME = document.getElementById('user-name');
-        const LOGIN_VIEW = document.getElementById('login-view'); 
+        const LOGIN_VIEW = document.getElementById('login-view');  
         
         const SETTINGS_MODAL = document.getElementById('settings-modal');
         const MODAL_LOGIN_VIEW = document.getElementById('modal-login-view');
@@ -1469,6 +1488,10 @@
         const SIGNUP_PASSWORD_INPUT = document.getElementById('signup-password-input');
         const RESET_EMAIL_INPUT = document.getElementById('reset-email-input');
         const RESET_BTN = document.getElementById('reset-btn');
+
+        // YENİ: Sosyal Giriş Butonları
+        const GOOGLE_SIGNIN_BTN = document.getElementById('google-signin-btn');
+        const APPLE_SIGNIN_BTN = document.getElementById('apple-signin-btn');
 
         const SIDEBAR = document.getElementById('sidebar');
         const TOGGLE_SIDEBAR_BTN = document.getElementById('toggle-sidebar-btn');
@@ -1639,7 +1662,7 @@
                          ${text}
                      </div>
                  </div>
-               `;
+                `;
              MESSAGES_CONTAINER.insertAdjacentHTML('beforeend', systemMessageHTML);
              autoScroll();
         }
@@ -1652,7 +1675,7 @@
                  <div class="chat-bubble ${messageClass}">
                      ${safeText.replace(/\n/g, '<br>')}
                  </div>
-               `;
+                `;
              MESSAGES_CONTAINER.insertAdjacentHTML('beforeend', messageHTML);
         }
         
@@ -1664,7 +1687,7 @@
                          <img src="${imageUrl}" alt="${altText}" loading="lazy" />
                      </div>
                  </div>
-               `;
+                `;
              MESSAGES_CONTAINER.insertAdjacentHTML('beforeend', imageHTML);
         }
         
@@ -2401,6 +2424,58 @@
             }
         }
         
+        // YENİ: GOOGLE GİRİŞ FONKSİYONU
+        async function signInWithGoogle() {
+            if (!auth) return;
+            const provider = new GoogleAuthProvider();
+            
+            try {
+                // Pop-up ile giriş yapmayı dene
+                const userCredential = await signInWithPopup(auth, provider);
+                console.log("Google ile giriş başarılı:", userCredential.user.uid);
+                // onAuthStateChanged tetiklenecek ve yeni kullanıcı profilini (gerekirse) oluşturacak.
+                window.closeSettingsModal();
+                
+            } catch (error) {
+                console.error("Google Giriş Hatası:", error);
+                // Sık karşılaşılan hataları işle
+                if (error.code === 'auth/account-exists-with-different-credential') {
+                    renderAuthError({ message: "Bu e-posta adresiyle kayıtlı başka bir hesap (belki şifre ile) zaten var." }, "login");
+                } else if (error.code === 'auth/popup-closed-by-user') {
+                    renderAuthError({ message: "Giriş penceresi kapatıldı." }, "login");
+                } else {
+                    renderAuthError(error, "login");
+                }
+            }
+        }
+
+        // YENİ: APPLE GİRİŞ FONKSİYONU
+        async function signInWithApple() {
+            if (!auth) return;
+            const provider = new OAuthProvider('apple.com');
+            
+            // Apple'dan e-posta ve isim talep et
+            provider.addScope('email');
+            provider.addScope('name');
+
+            try {
+                const userCredential = await signInWithPopup(auth, provider);
+                console.log("Apple ile giriş başarılı:", userCredential.user.uid);
+                // onAuthStateChanged tetiklenecek...
+                window.closeSettingsModal();
+
+            } catch (error) {
+                console.error("Apple Giriş Hatası:", error);
+                if (error.code === 'auth/account-exists-with-different-credential') {
+                    renderAuthError({ message: "Bu e-posta adresiyle kayıtlı başka bir hesap (belki şifre ile) zaten var." }, "login");
+                } else if (error.code === 'auth/popup-closed-by-user') {
+                    renderAuthError({ message: "Giriş penceresi kapatıldı." }, "login");
+                } else {
+                    renderAuthError(error, "login");
+                }
+            }
+        }
+        
         
         function listenToChat(userId, chatId) {
             if (!db) return;
@@ -2592,36 +2667,38 @@
                         if(USER_PROFILE_VIEW) USER_PROFILE_VIEW.classList.remove('hidden'); 
 
                         if (USER_NAME) USER_NAME.textContent = user.email || "Kullanıcı";
-                        if (PROFILE_PIC) PROFILE_PIC.textContent = (user.email || "K")[0].toUpperCase();
+                    if (PROFILE_PIC) PROFILE_PIC.textContent = (user.email || "K")[0].toUpperCase();
 
-                        let role = 'normal';
+                    let role = 'normal';
                         let currentTokens = 0;
                         const todayStr = getTodayDateString();
 
-                        if (profileDoc.exists()) {
-                            const data = profileDoc.data();
+                    if (profileDoc.exists()) {
+                        const data = profileDoc.data();
                             let dbRole = data.role;
                             if (!dbRole) {
                                 dbRole = 'normal';
                             }
                             role = dbRole.toLowerCase();
 
-                            if (data.date === todayStr) {
-                                currentTokens = data.tokens || 0;
-                            }
-                        } else {
-                            role = 'normal';
-                            currentTokens = 0;
-                            
-                            await setDoc(profileRef, {
-                                email: user.email,
-                                role: "normal",
-                                date: todayStr,
-                                tokens: 0
-                            });
+                        if (data.date === todayStr) {
+                            currentTokens = data.tokens || 0;
                         }
+                    } else {
+                        // YENİ: Bu, Google/Apple ile ilk kez giriş yapan KULLANICIDIR
+                        console.log("Yeni sosyal giriş kullanıcısı için profil oluşturuluyor:", user.email);
+                        role = 'normal';
+                        currentTokens = 0;
                         
-                        currentUserRole = role;
+                        await setDoc(profileRef, {
+                            email: user.email,
+                            role: "normal",
+                            date: todayStr,
+                            tokens: 0
+                        });
+                    }
+                    
+                    currentUserRole = role;
                         dailyUsage = { tokens: currentTokens };
                         
                         const roleQuota = QUOTAS[role];
@@ -2756,7 +2833,7 @@
 
         function closeChatContextMenu() {
             CHAT_CONTEXT_MENU.classList.add('hidden');
-            contextMenuChatId = null;
+            // contextMenuChatId = null; // ID'yi burada sıfırlama, modal'a devret
         }
 
         async function renameChat() {
@@ -2779,6 +2856,7 @@
                     renderSystemMessage("Başlık güncellenirken bir hata oluştu.", "error");
                 }
             }
+            contextMenuChatId = null; // İşlem bittikten sonra sıfırla
         }
 
         function openDeleteModal() {
@@ -2787,12 +2865,15 @@
             DELETE_CONFIRM_MODAL.classList.remove('hidden');
         }
 
+        // === GÜNCELLENDİ: closeDeleteModal ===
+        // Artık 'contextMenuChatId'yi sıfırlamıyor.
         function closeDeleteModal() {
             DELETE_CONFIRM_MODAL.classList.add('hidden');
-            contextMenuChatId = null;
+            // contextMenuChatId = null; // Bu satır kaldırıldı.
         }
 
-        // DÜZELTME: Sohbeti Sil Fonksiyonu (v4 - En Sağlam)
+        // === GÜNCELLENDİ: confirmDeleteChat ===
+        // Hata durumunda modalı kapatmıyor ve state'i (ID) sadece başarı durumunda sıfırlıyor.
         async function confirmDeleteChat() {
             if (!contextMenuChatId || !currentUserId || !db) {
                 console.warn("Delete conditions not met.");
@@ -2838,15 +2919,16 @@
                     await startNewChat(false);
                 }
                 
-                // Başarılı: Modalı kapat
+                // Başarılı: Modalı kapat ve state'i sıfırla
                 closeDeleteModal();
+                contextMenuChatId = null; // <-- Başarı durumunda ID'yi sıfırla
 
             } catch (error) {
                 console.error("Sohbet silinirken HATA:", error);
                 renderSystemMessage(`Sohbet silinirken bir hata oluştu: ${error.message}`, "error");
                 
-                // HATA: Modalı YİNE DE kapat (kullanıcı hatayı gördü)
-                closeDeleteModal(); 
+                // HATA: Modalı kapatma, kullanıcı hatayı görsün ve tekrar deneyebilsin.
+                // closeDeleteModal(); // <-- Bu satır kaldırıldı.
 
             } finally {
                 // Butonu her durumda (başarılı veya başarısız) eski haline getir
@@ -2923,6 +3005,11 @@
             SIGNOUT_BTN.addEventListener('click', signOutUser);
             RESET_BTN.addEventListener('click', sendPasswordReset);
             
+            // YENİ: Sosyal Giriş Listener'ları
+            GOOGLE_SIGNIN_BTN.addEventListener('click', signInWithGoogle);
+            APPLE_SIGNIN_BTN.addEventListener('click', signInWithApple);
+
+            
             PLUS_BTN.addEventListener('click', window.openPremiumModal);
 
             SHOW_SIGNUP_BTN.addEventListener('click', () => {
@@ -2973,7 +3060,14 @@
 
             RENAME_CHAT_BTN.addEventListener('click', renameChat);
             DELETE_CHAT_BTN.addEventListener('click', openDeleteModal);
-            CANCEL_DELETE_BTN.addEventListener('click', closeDeleteModal);
+            
+            // === GÜNCELLENDİ: CANCEL_DELETE_BTN listener ===
+            // Artık state'i (ID) de sıfırlıyor.
+            CANCEL_DELETE_BTN.addEventListener('click', () => {
+                closeDeleteModal();
+                contextMenuChatId = null; // <-- İptal edince ID'yi sıfırla
+            });
+            
             CONFIRM_DELETE_BTN.addEventListener('click', confirmDeleteChat);
             
             const RESEND_VERIFY_BTN = document.getElementById('resend-verify-btn');
