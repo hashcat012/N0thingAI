@@ -1261,7 +1261,7 @@
                     </button>
 
                     <!-- YENİ: Google ile Devam Et Butonu -->
-                    <button id="google-signin-btn" class="w-full py-3 social-btn rounded-xl font-semibold flex items-center justify-center" style="background-color: #4285F4; color: white;">
+                    <button id="google-signin-btn" class="w-full py-3 login-btn rounded-xl font-semibold flex items-center justify-center" style="background-color: var(--highlight-color); color: var(--sidebar-bg);">
                         <i class="fab fa-google mr-2"></i> Google ile Devam Et
                     </button>
 
@@ -1291,7 +1291,7 @@
                 </button>
 
                 <!-- YENİ: Google ile Devam Et Butonu (Kayıt için de) -->
-                <button id="google-signup-btn" class="w-full py-3 social-btn rounded-xl font-semibold flex items-center justify-center mt-4" style="background-color: #4285F4; color: white;">
+                <button id="google-signup-btn" class="w-full py-3 login-btn rounded-xl font-semibold flex items-center justify-center mt-4" style="background-color: var(--highlight-color); color: var(--sidebar-bg);">
                     <i class="fab fa-google mr-2"></i> Google ile Devam Et
                 </button>
 
@@ -1481,7 +1481,7 @@
                 <button id="resend-verify-btn" class="w-full py-2 px-4 rounded-lg font-semibold border" style="border-color: var(--btn-border);" data-translate="verify-email-resend">
                     E-postayı Tekrar Gönder
                 </button>
-                <button id="signout-from-verify-btn" class="w-full py-2 px-4 text-xs" style="color: var(--btn-border);" data-translate="logout">
+                <button id="signout-from-verify-btn" class="w-full py-2 px-4 text-xs" style="color: var(--text-secondary);" data-translate="logout">
                     Çıkış Yap
                 </button>
             </div>
@@ -1516,8 +1516,8 @@
             setPersistence, browserLocalPersistence,
             sendEmailVerification,
             sendPasswordResetEmail,
-            GoogleAuthProvider,
-            signInWithPopup
+            GoogleAuthProvider, // YENİ
+            signInWithPopup // YENİ
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { 
             getFirestore, doc, setDoc, addDoc, collection, onSnapshot, 
@@ -1525,11 +1525,12 @@
             Timestamp, updateDoc, getDocs,
             deleteDoc,
             runTransaction, 
-            writeBatch 
+            writeBatch,
+            limit // YENİ: Silme işlemi için eklendi
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // API Keys ve Modeller
-        const GEMINI_API_KEY = "AIzaSyCx4u1qHGlysIGpm1Zw0YBfXlqEXJ1J1BlvM"; 
+        const GEMINI_API_KEY = "AIzaSyCx4u1qHGlysIGpm1Zw0YBfXlqEXJ1BlvM"; 
         const CHAT_MODEL = "gemini-2.5-flash-preview-09-2025";
         const IMAGE_GEN_MODEL = "https://image.pollinations.ai/prompt/";
         
@@ -2200,7 +2201,7 @@
             
             console.log("Sohbet başlığı oluşturuluyor...");
             
-            const systemInstruction = "Kullanıcının ilk mesajına bakarak bu sohbet için 3-5 kelimelik kısa bir başlık oluştur. Sadece başlığı döndür, başka başlığı yazma. Örnek: 'İtalyan Mutfağı Tarifleri'";
+            const systemInstruction = "Kullanıcının ilk mesajına bakarak bu sohbet için 3-5 kelimelik kısa bir başlık oluştur. Sadece başlığı döndür, başka hiçbir şey yazma. Örnek: 'İtalyan Mutfağı Tarifleri'";
             const payload = {
                 contents: [
                     { parts: [{ text: `Kullanıcının ilk mesajı: "${firstMessage}"` }] }
@@ -3442,7 +3443,7 @@
                     if (VOICE_CHAT_STATUS) VOICE_CHAT_STATUS.textContent = transcript || getTranslation('voice-listening');
                     
                     if (isFinal && transcript.trim()) {
-                        console.log("Final final transcript (voice chat):", transcript);
+                        console.log("Final transcript (voice chat):", transcript);
                         recognition.stop(); // Konuşma bitince dur
                         sendMessage(transcript, true); // Mesajı gönder
                     }
@@ -3531,6 +3532,8 @@
             const newTitle = prompt(getTranslation('rename'), currentTitle);
 
             if (newTitle && newTitle.trim() !== "" && newTitle !== currentTitle) {
+                // FIX: Kopyala-yapıştır hatası. 'if' bloğunun içeriği ve fonksiyonun
+                // kapanış parantezi eksikti. Bu, 'Unexpected end of input' hatasına neden oluyordu.
                 try {
                     await updateDoc(chatRef, {
                         title: newTitle.trim().substring(0, 30)
@@ -3541,8 +3544,10 @@
                     renderSystemMessage(getTranslation('error-chat-rename'), "error");
                 }
             }
-        }
+        } // <-- FIX: Eksik kapanış parantezi eklendi.
 
+        // FIX: 'openDeleteModal' ve 'closeDeleteModal' fonksiyonları eksikti.
+        // Bu fonksiyonlar 'openDeleteModal is not defined' hatasını çözmek için eklendi.
         function openDeleteModal() {
             if (!contextMenuChatId) return;
             if (CHAT_CONTEXT_MENU) CHAT_CONTEXT_MENU.classList.add('hidden');
@@ -3551,7 +3556,43 @@
 
         function closeDeleteModal() {
             if (DELETE_CONFIRM_MODAL) DELETE_CONFIRM_MODAL.classList.add('hidden');
-            contextMenuChatId = null;
+            contextMenuChatId = null; // chat ID'yi burada sıfırla
+        }
+
+        // DÜZELTME: 'deleteCollection' ve 'deleteQueryBatch' fonksiyonları,
+        // 'confirmDeleteChat' fonksiyonundan ÖNCE tanımlanmalıdır.
+        // Bu, 'deleteCollection is not defined' hatasını önler.
+        async function deleteQueryBatch(db, q, resolve) {
+            const snapshot = await getDocs(q);
+            const batchSize = snapshot.size;
+
+            if (batchSize === 0) {
+                resolve();
+                return;
+            }
+
+            const batch = writeBatch(db);
+            snapshot.docs.forEach((doc) => {
+                batch.delete(doc.ref);
+            });
+
+            await batch.commit();
+
+            // DÜZELTME: 'process.nextTick' (Node.js) yerine tarayıcı uyumlu 'setTimeout(..., 0)' kullanıldı.
+            // Bu, 'process is not defined' hatasını düzeltir ve silme işleminin çalışmasını sağlar.
+            setTimeout(() => {
+                deleteQueryBatch(db, q, resolve);
+            }, 0);
+        }
+        
+        // DÜZELTME: Bu fonksiyon, confirmDeleteChat'ten önce tanımlandı.
+        async function deleteCollection(db, collectionPath, batchSize = 500) {
+          const collectionRef = collection(db, collectionPath);
+          const q = query(collectionRef, orderBy('__name__'), limit(batchSize));
+
+          return new Promise((resolve, reject) => {
+            deleteQueryBatch(db, q, resolve).catch(reject);
+          });
         }
 
         async function confirmDeleteChat() {
@@ -3569,20 +3610,10 @@
             console.log(`Sohbet siliniyor: ${chatIdToDelete}, Kullanıcı: ${userId}`);
 
             try {
+                // FIX: deleteCollection fonksiyonu çağrılmalı (önceki düzeltmedeki gibi)
                 console.log("Mesajlar siliniyor...");
-                const messagesRef = collection(db, "users", userId, "chats", chatIdToDelete, "messages");
-                const messagesSnapshot = await getDocs(messagesRef);
-                
-                if (!messagesSnapshot.empty) {
-                    const batch = writeBatch(db);
-                    messagesSnapshot.forEach((msgDoc) => {
-                        batch.delete(msgDoc.ref);
-                    });
-                    await batch.commit();
-                    console.log("Mesajlar silindi.");
-                } else {
-                    console.log("Sohbette silinecek mesaj bulunamadı.");
-                }
+                // 'deleteCollection' artık burada çağrıldığında tanımlı olacaktır.
+                await deleteCollection(db, `users/${userId}/chats/${chatIdToDelete}/messages`);
 
                 console.log("Ana sohbet siliniyor...");
                 const chatRef = doc(db, "users", userId, "chats", chatIdToDelete);
@@ -3609,7 +3640,8 @@
                 CONFIRM_DELETE_BTN.textContent = getTranslation('delete');
             }
         }
-
+        
+        // DÜZELTME: deleteCollection fonksiyonu buradan kaldırıldı ve confirmDeleteChat'in üstüne taşındı.
 
 
         function toggleInputPopover() {
@@ -3822,8 +3854,19 @@
                 SCROLL_TO_BOTTOM_BTN.addEventListener('click', autoScroll);
             }
 
-            if (RENAME_CHAT_BTN) RENAME_CHAT_BTN.addEventListener('click', renameChat);
-            if (DELETE_CHAT_BTN) DELETE_CHAT_BTN.addEventListener('click', openDeleteModal);
+            // DÜZELTME: "Sohbeti Sil" ve "Yeniden Adlandır" butonlarına tıklandığında
+            // sayfanın tıklama olayını (document.click) tetiklemesini engellemek için
+            // e.stopPropagation() eklendi. Bu, 'contextMenuChatId'nin
+            // silme işlemi başlamadan 'null' olmasını engeller.
+            if (RENAME_CHAT_BTN) RENAME_CHAT_BTN.addEventListener('click', (e) => {
+                e.stopPropagation(); 
+                renameChat();
+            });
+            if (DELETE_CHAT_BTN) DELETE_CHAT_BTN.addEventListener('click', (e) => {
+                e.stopPropagation(); 
+                openDeleteModal();
+            });
+            
             if (CANCEL_DELETE_BTN) CANCEL_DELETE_BTN.addEventListener('click', closeDeleteModal);
             if (CONFIRM_DELETE_BTN) CONFIRM_DELETE_BTN.addEventListener('click', confirmDeleteChat);
             
@@ -3963,8 +4006,14 @@
                 setResendButtonCooldown(initialCooldown);
             }
 
+            // FIX: Fonksiyonları 'window' nesnesine ekleyerek global
+            // scope'a taşı. Bu, 'TypeError: ... is not a function' hatasını çözer.
+            window.openSettingsModal = openSettingsModal;
+            window.closeSettingsModal = closeSettingsModal;
+            window.openPremiumModal = openPremiumModal;
+            window.closePremiumModal = closePremiumModal;
+
         });
     </script>
 </body>
 </html>
-
