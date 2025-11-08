@@ -1183,9 +1183,7 @@
                         <button id="google-signin-btn" class="w-full py-3 rounded-xl font-semibold social-btn flex items-center justify-center gap-3">
                             <i class="fab fa-google text-lg"></i> Google ile Devam Et
                         </button>
-                        <button id="apple-signin-btn" class="w-full py-3 rounded-xl font-semibold social-btn flex items-center justify-center gap-3">
-                            <i class="fab fa-apple text-lg"></i> Apple ile Devam Et
-                        </button>
+                        <!-- SİLİNDİ: Apple ile Giriş Butonu kaldırıldı -->
                     </div>
 
                     <p class="text-xs text-center mt-4" style="color: var(--text-secondary);"> <!-- mt-4 eklendi -->
@@ -1199,6 +1197,8 @@
                 <h2 class="text-xl font-bold mb-4 text-center">Yeni Hesap Oluştur</h2>
                 <p id="signup-error-message" class="text-center text-sm text-red-500 mb-4 hidden"></p>
 
+                <!-- YENİ: Kullanıcı Adı Inputu -->
+                <input id="signup-username-input" type="text" placeholder="Kullanıcı Adı" class="w-full p-3 rounded-lg border mb-4">
                 <input id="signup-email-input" type="email" placeholder="Email adresiniz" class="w-full p-3 rounded-lg border mb-4">
                 <input id="signup-password-input" type="password" placeholder="Yeni şifreniz" class="w-full p-3 rounded-lg border mb-4">
                 <button id="signup-btn" class="w-full py-3 login-btn rounded-xl font-semibold" style="background-color: var(--highlight-color); color: var(--sidebar-bg);">
@@ -1393,7 +1393,7 @@
             setPersistence, browserLocalPersistence,
             sendEmailVerification,
             sendPasswordResetEmail,
-            GoogleAuthProvider, OAuthProvider, signInWithPopup // YENİ EKLENDİ
+            GoogleAuthProvider, signInWithPopup // OAuthProvider SİLİNDİ
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { 
             getFirestore, doc, setDoc, addDoc, collection, onSnapshot, 
@@ -1486,12 +1486,13 @@
         const SHOW_SIGNIN_BTN_FROM_RESET = document.getElementById('show-signin-btn-from-reset');
         const SIGNUP_EMAIL_INPUT = document.getElementById('signup-email-input');
         const SIGNUP_PASSWORD_INPUT = document.getElementById('signup-password-input');
+        const SIGNUP_USERNAME_INPUT = document.getElementById('signup-username-input'); // YENİ EKLENDİ
         const RESET_EMAIL_INPUT = document.getElementById('reset-email-input');
         const RESET_BTN = document.getElementById('reset-btn');
 
         // YENİ: Sosyal Giriş Butonları
         const GOOGLE_SIGNIN_BTN = document.getElementById('google-signin-btn');
-        const APPLE_SIGNIN_BTN = document.getElementById('apple-signin-btn');
+        // SİLİNDİ: APPLE_SIGNIN_BTN değişkeni kaldırıldı
 
         const SIDEBAR = document.getElementById('sidebar');
         const TOGGLE_SIDEBAR_BTN = document.getElementById('toggle-sidebar-btn');
@@ -1655,6 +1656,9 @@
             }
         }
 
+        // HATA DÜZELTMESİ: EKSİK FONKSİYONLAR AŞAĞIYA EKLENDİ
+        // HATA DÜZELTMESİ: EKSİK FONKSİYONLAR AŞAĞIYA EKLENDİ
+
         function renderSystemMessage(text, type = "info") {
              const systemMessageHTML = `
                  <div class="message-row system-message-row">
@@ -1662,10 +1666,10 @@
                          ${text}
                      </div>
                  </div>
-                `;
+               `;
              MESSAGES_CONTAINER.insertAdjacentHTML('beforeend', systemMessageHTML);
              autoScroll();
-        }
+         }
 
         function addMessageToUI(text, sender) {
              const messageClass = sender === 'user' ? 'user' : 'ai';
@@ -1675,9 +1679,12 @@
                  <div class="chat-bubble ${messageClass}">
                      ${safeText.replace(/\n/g, '<br>')}
                  </div>
-                `;
+               `;
              MESSAGES_CONTAINER.insertAdjacentHTML('beforeend', messageHTML);
-        }
+         }
+        
+        // HATA DÜZELTMESİ: EKSİK FONKSİYONLAR AŞAĞIYA EKLENDİ
+        // HATA DÜZELTMESİ: EKSİK FONKSİYONLAR AŞAĞIYA EKLENDİ
         
         function addImageToUI(imageUrl, altText) {
              const imageHTML = `
@@ -1687,16 +1694,19 @@
                          <img src="${imageUrl}" alt="${altText}" loading="lazy" />
                      </div>
                  </div>
-                `;
+               `;
              MESSAGES_CONTAINER.insertAdjacentHTML('beforeend', imageHTML);
-        }
+         }
         
         // --- Core Application Logic (Firestore Eklendi) ---
+
+        // HATA DÜZELTMESİ: EKSİK FONKSİYONLAR EKLENDİ (YUKARIDA)
+        // HATA DÜZELTMESİ: EKSİK FONKSİYONLAR EKLENDİ (YUKARIDA)
 
         async function startNewChat(isTemporary = false) {
             if (isWaitingForResponse) return;
 
-            isTemporaryChat = isTemporary; 
+            isTemporaryChat = isTemporary;  
             
             if (unsubscribeChat) unsubscribeChat();
             unsubscribeChat = null;
@@ -2341,10 +2351,11 @@
             if (!auth) return;
             SIGNUP_ERROR_MESSAGE.classList.add('hidden');
             try {
+                const username = SIGNUP_USERNAME_INPUT.value.trim(); // YENİ
                 const email = SIGNUP_EMAIL_INPUT.value;
                 const password = SIGNUP_PASSWORD_INPUT.value;
-                if (!email || !password) {
-                    renderAuthError({ code: 'auth/missing-fields', message: "Email ve şifre alanları boş bırakılamaz." }, 'signup');
+                if (!username || !email || !password) { // YENİ: username eklendi
+                    renderAuthError({ code: 'auth/missing-fields', message: "Kullanıcı adı, email ve şifre alanları boş bırakılamaz." }, 'signup'); // YENİ: Mesaj güncellendi
                     return;
                 }
                 if (password.length < 6) {
@@ -2368,10 +2379,11 @@
                     
                     const profileRef = doc(db, "users", userId, "chats", "--profile--");
                     await setDoc(profileRef, {
+                        username: username, // YENİ EKLENDİ
                         email: userCredential.user.email,
                         role: "normal",
                         date: getTodayDateString(),
-                        tokens: 0,
+                        tokens: 0
                     });
                 }
                 
@@ -2424,57 +2436,27 @@
             }
         }
         
-        // YENİ: GOOGLE GİRİŞ FONKSİYONU
         async function signInWithGoogle() {
             if (!auth) return;
-            const provider = new GoogleAuthProvider();
+            AUTH_ERROR_MESSAGE.classList.add('hidden');
             
             try {
-                // Pop-up ile giriş yapmayı dene
-                const userCredential = await signInWithPopup(auth, provider);
-                console.log("Google ile giriş başarılı:", userCredential.user.uid);
-                // onAuthStateChanged tetiklenecek ve yeni kullanıcı profilini (gerekirse) oluşturacak.
+                const provider = new GoogleAuthProvider();
+                await signInWithPopup(auth, provider);
+                // Auth state listener (setupAuthListener) geri kalanı halledecek
                 window.closeSettingsModal();
-                
+
             } catch (error) {
                 console.error("Google Giriş Hatası:", error);
-                // Sık karşılaşılan hataları işle
-                if (error.code === 'auth/account-exists-with-different-credential') {
-                    renderAuthError({ message: "Bu e-posta adresiyle kayıtlı başka bir hesap (belki şifre ile) zaten var." }, "login");
-                } else if (error.code === 'auth/popup-closed-by-user') {
-                    renderAuthError({ message: "Giriş penceresi kapatıldı." }, "login");
-                } else {
-                    renderAuthError(error, "login");
-                }
+                renderAuthError(error, "login");
             }
         }
 
-        // YENİ: APPLE GİRİŞ FONKSİYONU
-        async function signInWithApple() {
-            if (!auth) return;
-            const provider = new OAuthProvider('apple.com');
-            
-            // Apple'dan e-posta ve isim talep et
-            provider.addScope('email');
-            provider.addScope('name');
+        // HATA DÜZELTMESİ: EKSİK FONKSİYONLAR EKLENDİ (YUKARIDA)
+        // HATA DÜZELTMESİ: EKSİK FONKSİYONLAR EKLENDİ (YUKARIDA)
 
-            try {
-                const userCredential = await signInWithPopup(auth, provider);
-                console.log("Apple ile giriş başarılı:", userCredential.user.uid);
-                // onAuthStateChanged tetiklenecek...
-                window.closeSettingsModal();
 
-            } catch (error) {
-                console.error("Apple Giriş Hatası:", error);
-                if (error.code === 'auth/account-exists-with-different-credential') {
-                    renderAuthError({ message: "Bu e-posta adresiyle kayıtlı başka bir hesap (belki şifre ile) zaten var." }, "login");
-                } else if (error.code === 'auth/popup-closed-by-user') {
-                    renderAuthError({ message: "Giriş penceresi kapatıldı." }, "login");
-                } else {
-                    renderAuthError(error, "login");
-                }
-            }
-        }
+        // SİLİNDİ: signInWithApple fonksiyonunun tamamı kaldırıldı.
         
         
         function listenToChat(userId, chatId) {
@@ -2666,39 +2648,61 @@
                         if(LOGIN_VIEW) LOGIN_VIEW.classList.add('hidden');
                         if(USER_PROFILE_VIEW) USER_PROFILE_VIEW.classList.remove('hidden'); 
 
-                        if (USER_NAME) USER_NAME.textContent = user.email || "Kullanıcı";
-                    if (PROFILE_PIC) PROFILE_PIC.textContent = (user.email || "K")[0].toUpperCase();
-
-                    let role = 'normal';
+                        // --- YENİ GÜNCELLENMİŞ BLOK BAŞLANGICI ---
+                        
+                        let role = 'normal';
                         let currentTokens = 0;
                         const todayStr = getTodayDateString();
+                        let userProfileName = user.email; // Varsayılan
+                        let userProfilePicLetter = (user.email || "K")[0].toUpperCase(); // Varsayılan
 
-                    if (profileDoc.exists()) {
-                        const data = profileDoc.data();
+                        if (profileDoc.exists()) {
+                            const data = profileDoc.data();
                             let dbRole = data.role;
                             if (!dbRole) {
                                 dbRole = 'normal';
                             }
                             role = dbRole.toLowerCase();
 
-                        if (data.date === todayStr) {
-                            currentTokens = data.tokens || 0;
+                            if (data.date === todayStr) {
+                                currentTokens = data.tokens || 0;
+                            }
+                            
+                            // Kullanıcı adını profilden oku
+                            if (data.username) {
+                                userProfileName = data.username;
+                                userProfilePicLetter = data.username[0].toUpperCase();
+                            }
+                            // Eski kullanıcıysa (username alanı yoksa) e-postayı kullan (varsayılan zaten ayarlı)
+
+                        } else {
+                            // Bu, Google/Apple ile ilk kez giriş yapan KULLANICIDIR
+                            console.log("Yeni sosyal giriş kullanıcısı için profil oluşturuluyor:", user.email);
+                            role = 'normal';
+                            currentTokens = 0;
+                            
+                            // Sosyal giriş için displayName kullanmayı dene
+                            userProfileName = user.displayName || user.email; // Google/Apple adını al
+                            if (userProfileName) {
+                                userProfilePicLetter = userProfileName[0].toUpperCase();
+                            }
+
+                            await setDoc(profileRef, {
+                                username: userProfileName, // Kullanıcı adını kaydet
+                                email: user.email,
+                                role: "normal",
+                                date: todayStr,
+                                tokens: 0
+                            });
                         }
-                    } else {
-                        // YENİ: Bu, Google/Apple ile ilk kez giriş yapan KULLANICIDIR
-                        console.log("Yeni sosyal giriş kullanıcısı için profil oluşturuluyor:", user.email);
-                        role = 'normal';
-                        currentTokens = 0;
                         
-                        await setDoc(profileRef, {
-                            email: user.email,
-                            role: "normal",
-                            date: todayStr,
-                            tokens: 0
-                        });
-                    }
-                    
-                    currentUserRole = role;
+                        // DOM'u alınan veriye göre güncelle
+                        if (USER_NAME) USER_NAME.textContent = userProfileName;
+                        if (PROFILE_PIC) PROFILE_PIC.textContent = userProfilePicLetter;
+                        
+                        // --- YENİ GÜNCELLENMİŞ BLOK SONU ---
+
+                        currentUserRole = role;
                         dailyUsage = { tokens: currentTokens };
                         
                         const roleQuota = QUOTAS[role];
@@ -2833,7 +2837,7 @@
 
         function closeChatContextMenu() {
             CHAT_CONTEXT_MENU.classList.add('hidden');
-            // contextMenuChatId = null; // ID'yi burada sıfırlama, modal'a devret
+            contextMenuChatId = null;
         }
 
         async function renameChat() {
@@ -2856,7 +2860,6 @@
                     renderSystemMessage("Başlık güncellenirken bir hata oluştu.", "error");
                 }
             }
-            contextMenuChatId = null; // İşlem bittikten sonra sıfırla
         }
 
         function openDeleteModal() {
@@ -2865,15 +2868,12 @@
             DELETE_CONFIRM_MODAL.classList.remove('hidden');
         }
 
-        // === GÜNCELLENDİ: closeDeleteModal ===
-        // Artık 'contextMenuChatId'yi sıfırlamıyor.
         function closeDeleteModal() {
             DELETE_CONFIRM_MODAL.classList.add('hidden');
-            // contextMenuChatId = null; // Bu satır kaldırıldı.
+            contextMenuChatId = null; // DÜZELTME: ID'yi burada sıfırla
         }
 
-        // === GÜNCELLENDİ: confirmDeleteChat ===
-        // Hata durumunda modalı kapatmıyor ve state'i (ID) sadece başarı durumunda sıfırlıyor.
+        // DÜZELTME: Sohbeti Sil Fonksiyonu (v4 - En Sağlam)
         async function confirmDeleteChat() {
             if (!contextMenuChatId || !currentUserId || !db) {
                 console.warn("Delete conditions not met.");
@@ -2919,21 +2919,25 @@
                     await startNewChat(false);
                 }
                 
-                // Başarılı: Modalı kapat ve state'i sıfırla
+                // Başarılı: Modalı kapat
                 closeDeleteModal();
-                contextMenuChatId = null; // <-- Başarı durumunda ID'yi sıfırla
 
             } catch (error) {
                 console.error("Sohbet silinirken HATA:", error);
                 renderSystemMessage(`Sohbet silinirken bir hata oluştu: ${error.message}`, "error");
                 
-                // HATA: Modalı kapatma, kullanıcı hatayı görsün ve tekrar deneyebilsin.
-                // closeDeleteModal(); // <-- Bu satır kaldırıldı.
+                // HATA: Modalı YİNE DE kapat (kullanıcı hatayı gördü)
+                // DÜZELTME: closeDeleteModal'ı burada ÇAĞIRMA, sadece butonları düzelt
+                // closeDeleteModal(); 
 
             } finally {
                 // Butonu her durumda (başarılı veya başarısız) eski haline getir
                 CONFIRM_DELETE_BTN.disabled = false;
                 CONFIRM_DELETE_BTN.textContent = "Sil";
+                
+                // DÜZELTME: closeDeleteModal'ı çağırmadığımız için, 
+                // ID'yi burada manuel sıfırlamıyoruz (çünkü modal hala açık olabilir).
+                // ID sadece closeDeleteModal veya openDeleteModal'da yönetilmeli.
             }
         }
 
@@ -3007,8 +3011,7 @@
             
             // YENİ: Sosyal Giriş Listener'ları
             GOOGLE_SIGNIN_BTN.addEventListener('click', signInWithGoogle);
-            APPLE_SIGNIN_BTN.addEventListener('click', signInWithApple);
-
+            // SİLİNDİ: APPLE_SIGNIN_BTN listener'ı kaldırıldı
             
             PLUS_BTN.addEventListener('click', window.openPremiumModal);
 
@@ -3060,14 +3063,7 @@
 
             RENAME_CHAT_BTN.addEventListener('click', renameChat);
             DELETE_CHAT_BTN.addEventListener('click', openDeleteModal);
-            
-            // === GÜNCELLENDİ: CANCEL_DELETE_BTN listener ===
-            // Artık state'i (ID) de sıfırlıyor.
-            CANCEL_DELETE_BTN.addEventListener('click', () => {
-                closeDeleteModal();
-                contextMenuChatId = null; // <-- İptal edince ID'yi sıfırla
-            });
-            
+            CANCEL_DELETE_BTN.addEventListener('click', closeDeleteModal);
             CONFIRM_DELETE_BTN.addEventListener('click', confirmDeleteChat);
             
             const RESEND_VERIFY_BTN = document.getElementById('resend-verify-btn');
