@@ -1972,6 +1972,13 @@
                 return;
             }
 
+            // DÜZELTME: Anonim kullanıcılar görsel oluşturamasın
+            if (auth.currentUser.isAnonymous && chatMode === 'image') {
+                renderSystemMessage("Görsel oluşturmak için lütfen giriş yapın.", "error");
+                window.openSettingsModal();
+                return;
+            }
+
             // YENİ: E-posta doğrulanmamışsa mesaj göndermeyi engelle
             if (!auth.currentUser.isAnonymous && !auth.currentUser.emailVerified) {
                 renderSystemMessage("Mesaj göndermek için lütfen e-postanızı doğrulayın.", "error");
@@ -2726,20 +2733,18 @@
 
         function closeChatContextMenu() {
             CHAT_CONTEXT_MENU.classList.add('hidden');
-            // DİKKAT: contextMenuChatId'yi burada null yapma,
-            // openDeleteModal veya renameChat fonksiyonları onu kullanacak.
-            // Onların içinde null yapılacak.
+            contextMenuChatId = null;
         }
 
         async function renameChat() {
-            const chatId = contextMenuChatId; // ID'yi yakala
-            closeChatContextMenu(); // Menüyü kapat
-            if (!chatId || !currentUserId) return;
+            if (!contextMenuChatId || !currentUserId) return;
             
-            const chatRef = doc(db, "users", currentUserId, "chats", chatId);
+            const chatRef = doc(db, "users", currentUserId, "chats", contextMenuChatId);
             const chatDoc = await getDoc(chatRef);
             const currentTitle = chatDoc.data().title || "";
 
+            // GÜNCELLEME: alert/prompt yerine özel bir modal lazım, ama şimdilik prompt
+            // UYARI: Bu prompt, iframe/sandbox ortamlarında çalışmayabilir.
             const newTitle = prompt("Sohbet için yeni bir başlık girin:", currentTitle);
 
             if (newTitle && newTitle.trim() !== "" && newTitle !== currentTitle) {
@@ -2753,18 +2758,13 @@
                     renderSystemMessage("Başlık güncellenirken bir hata oluştu.", "error");
                 }
             }
-            contextMenuChatId = null; // İşlem bitince ID'yi temizle
         }
 
         function openDeleteModal() {
-            // ID'yi 'contextMenuChatId'den alıp modal açılınca orada tutuyoruz.
-            // closeChatContextMenu ID'yi null yapacağı için
-            // ID'yi burada kontrol etmemiz lazım.
             if (!contextMenuChatId) return;
-            
-            closeChatContextMenu(); // Menüyü kapat
+            // Menüyü kapat, silme modalını aç
+            CHAT_CONTEXT_MENU.classList.add('hidden');
             DELETE_CONFIRM_MODAL.classList.remove('hidden');
-            // ID, silme onayı verilene kadar contextMenuChatId'de kalır
         }
 
         function closeDeleteModal() {
@@ -2778,15 +2778,18 @@
             const chatIdToDelete = contextMenuChatId;
             const userId = currentUserId;
             
-            closeDeleteModal(); // Bu, contextMenuChatId'yi null yapar
+            closeDeleteModal(); 
             
             console.log(`Sohbet siliniyor: ${chatIdToDelete}`);
 
             try {
+                // DÜZELTME: Daha güvenilir silme yöntemi (Önce mesajlar, sonra sohbet)
+                
                 // 1. Adım: Tüm alt mesajları (messages) sil
                 const messagesRef = collection(db, "users", userId, "chats", chatIdToDelete, "messages");
                 const messagesSnapshot = await getDocs(messagesRef);
                 
+                // Toplu silme (batch) işlemi
                 const batch = writeBatch(db);
                 messagesSnapshot.forEach((msgDoc) => {
                     batch.delete(msgDoc.ref);
@@ -2894,15 +2897,8 @@
             }
 
             // YENİ: Geçmiş Menüsü Olayları
-            // DÜZELTME: Event bubbling'i durdurmak için 'e.stopPropagation()' eklendi
-            RENAME_CHAT_BTN.addEventListener('click', (e) => {
-                e.stopPropagation(); // Bubbling'i durdur (document listener'ı tetiklemesin)
-                renameChat();
-            });
-            DELETE_CHAT_BTN.addEventListener('click', (e) => {
-                e.stopPropagation(); // Bubbling'i durdur (document listener'ı tetiklemesin)
-                openDeleteModal();
-            });
+            RENAME_CHAT_BTN.addEventListener('click', renameChat);
+            DELETE_CHAT_BTN.addEventListener('click', openDeleteModal);
             // YENİ: Silme Modalı Olayları
             CANCEL_DELETE_BTN.addEventListener('click', closeDeleteModal);
             CONFIRM_DELETE_BTN.addEventListener('click', confirmDeleteChat);
