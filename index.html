@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -1259,6 +1260,12 @@
                     <button id="email-signin-btn" class="w-full py-3 login-btn rounded-xl font-semibold" style="background-color: var(--highlight-color); color: var(--sidebar-bg);" data-translate="login-email">
                         Email ile Giriş Yap
                     </button>
+
+                    <!-- YENİ: Google ile Devam Et Butonu -->
+                    <button id="google-signin-btn" class="w-full py-3 social-btn rounded-xl font-semibold flex items-center justify-center" style="background-color: #4285F4; color: white;">
+                        <i class="fab fa-google mr-2"></i> Google ile Devam Et
+                    </button>
+
                     <p class="text-xs text-center" style="color: var(--text-secondary);">
                         <span data-translate="no-account">Hesabınız yok mu?</span>
                         <button id="show-signup-btn" class="font-bold underline hover:opacity-100" style="color: var(--text-primary);" data-translate="create-account-link">Yeni Hesap Oluşturun</button>
@@ -1283,6 +1290,12 @@
                 <button id="signup-btn" class="w-full py-3 login-btn rounded-xl font-semibold" style="background-color: var(--highlight-color); color: var(--sidebar-bg);" data-translate="signup-btn">
                     Kayıt Ol (Sign Up)
                 </button>
+
+                <!-- YENİ: Google ile Devam Et Butonu (Kayıt için de) -->
+                <button id="google-signup-btn" class="w-full py-3 social-btn rounded-xl font-semibold flex items-center justify-center mt-4" style="background-color: #4285F4; color: white;">
+                    <i class="fab fa-google mr-2"></i> Google ile Devam Et
+                </button>
+
                 <p class="text-xs text-center mt-4" style="color: var(--text-secondary);">
                     <span data-translate="have-account">Zaten bir hesabınız var mı?</span>
                     <button id="show-signin-btn" class="font-bold underline hover:opacity-100" style="color: var(--text-primary);" data-translate="login-link">Giriş Yapın</button>
@@ -1469,7 +1482,7 @@
                 <button id="resend-verify-btn" class="w-full py-2 px-4 rounded-lg font-semibold border" style="border-color: var(--btn-border);" data-translate="verify-email-resend">
                     E-postayı Tekrar Gönder
                 </button>
-                <button id="signout-from-verify-btn" class="w-full py-2 px-4 text-xs" style="color: var(--text-secondary);" data-translate="logout">
+                <button id="signout-from-verify-btn" class="w-full py-2 px-4 text-xs" style="color: var(--btn-border);" data-translate="logout">
                     Çıkış Yap
                 </button>
             </div>
@@ -1503,7 +1516,9 @@
             signInWithEmailAndPassword,
             setPersistence, browserLocalPersistence,
             sendEmailVerification,
-            sendPasswordResetEmail
+            sendPasswordResetEmail,
+            GoogleAuthProvider,
+            signInWithPopup
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { 
             getFirestore, doc, setDoc, addDoc, collection, onSnapshot, 
@@ -1515,7 +1530,7 @@
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // API Keys ve Modeller
-        const GEMINI_API_KEY = "AIzaSyCx4u1qHGlysIGpm1Zw0YBfXlqEXJ1BlvM"; 
+        const GEMINI_API_KEY = "AIzaSyCx4u1qHGlysIGpm1Zw0YBfXlqEXJ1J1BlvM"; 
         const CHAT_MODEL = "gemini-2.5-flash-preview-09-2025";
         const IMAGE_GEN_MODEL = "https://image.pollinations.ai/prompt/";
         
@@ -2186,7 +2201,7 @@
             
             console.log("Sohbet başlığı oluşturuluyor...");
             
-            const systemInstruction = "Kullanıcının ilk mesajına bakarak bu sohbet için 3-5 kelimelik kısa bir başlık oluştur. Sadece başlığı döndür, başka hiçbir şey yazma. Örnek: 'İtalyan Mutfağı Tarifleri'";
+            const systemInstruction = "Kullanıcının ilk mesajına bakarak bu sohbet için 3-5 kelimelik kısa bir başlık oluştur. Sadece başlığı döndür, başka başlığı yazma. Örnek: 'İtalyan Mutfağı Tarifleri'";
             const payload = {
                 contents: [
                     { parts: [{ text: `Kullanıcının ilk mesajı: "${firstMessage}"` }] }
@@ -2897,6 +2912,35 @@
             }
         }
 
+        // YENİ: Google ile Giriş/Kayıt Fonksiyonu
+        async function signInWithGoogle() {
+            if (!auth) return;
+            const provider = new GoogleAuthProvider();
+            try {
+                const result = await signInWithPopup(auth, provider);
+                const user = result.user;
+
+                if (db) {
+                    const profileRef = doc(db, "users", user.uid, "chats", "--profile--");
+                    const profileDoc = await getDoc(profileRef);
+                    if (!profileDoc.exists()) {
+                        await setDoc(profileRef, {
+                            username: user.displayName || user.email.split('@')[0],
+                            email: user.email,
+                            role: "normal",
+                            date: getTodayDateString(),
+                            tokens: 0,
+                        });
+                    }
+                }
+
+                window.closeSettingsModal();
+            } catch (error) {
+                console.error("Google Giriş Hatası:", error);
+                renderAuthError(error, "login");
+            }
+        }
+
         async function signUpWithEmail() {
             if (!auth || !SIGNUP_EMAIL_INPUT || !SIGNUP_PASSWORD_INPUT || !SIGNUP_USERNAME_INPUT || !SIGNUP_ERROR_MESSAGE) return;
             SIGNUP_ERROR_MESSAGE.classList.add('hidden');
@@ -3399,7 +3443,7 @@
                     if (VOICE_CHAT_STATUS) VOICE_CHAT_STATUS.textContent = transcript || getTranslation('voice-listening');
                     
                     if (isFinal && transcript.trim()) {
-                        console.log("Final transcript (voice chat):", transcript);
+                        console.log("Final final transcript (voice chat):", transcript);
                         recognition.stop(); // Konuşma bitince dur
                         sendMessage(transcript, true); // Mesajı gönder
                     }
@@ -3887,6 +3931,12 @@
                 });
             }
 
+            // YENİ: Google Giriş Butonları
+            const GOOGLE_SIGNIN_BTN = document.getElementById('google-signin-btn');
+            const GOOGLE_SIGNUP_BTN = document.getElementById('google-signup-btn');
+            if (GOOGLE_SIGNIN_BTN) GOOGLE_SIGNIN_BTN.addEventListener('click', signInWithGoogle);
+            if (GOOGLE_SIGNUP_BTN) GOOGLE_SIGNUP_BTN.addEventListener('click', signInWithGoogle); // Kayıt için de aynı fonksiyonu kullan (Firebase otomatik yönetir)
+
             // --- YENİ: Kayıtlı ayarları yükle ---
             const savedTheme = localStorage.getItem('n0thingai_theme') || 'dark-mode';
             applyTheme(savedTheme);
@@ -3918,3 +3968,4 @@
     </script>
 </body>
 </html>
+```
